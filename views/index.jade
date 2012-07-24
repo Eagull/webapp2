@@ -1,0 +1,127 @@
+doctype 5
+html(itemscope, itemtype="http://schema.org/Product")
+	head
+		title Eagull
+
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<meta http-equiv="X-UA-Compatible" content="chrome=1">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<meta name="keywords" content="chatroom firemoth eagull eagle seagull gull fire moth group chat trollmoth chaosmoth groupchat">
+		<meta name="description" content="A chatroom based community, where friends and strangers can coexist!">
+		<meta name="copyright" content="&copy; 2011 Eagull">
+		<meta itemprop="name" content="Eagull">
+		<meta itemprop="description" content="A chatroom based community, where friends and strangers can coexist!">
+		<meta itemprop="url" content="http://www.eagull.net/">
+		<meta itemprop="image" content="http://www.eagull.net/logo.png">
+		<meta itemprop="author" content="http://plus.google.com/102352740383917776245">
+		<meta property="og:title" content="Eagull" />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="http://www.eagull.net/" />
+		<meta property="og:image" content="http://www.eagull.net/logo.png" />
+		<meta property="og:site_name" content="Eagull" />
+		<meta property="fb:app_id" content="216540884750"/>
+
+		link(rel='icon', type='image/x-icon', href="/favicon.ico")
+		link(href='http://fonts.googleapis.com/css?family=Architects+Daughter', rel='stylesheet', type='text/css')
+
+		!=css('foundation.css')
+		!=css('global.css')
+
+		script window.blaze = { version: "#{version}", debug: (location.hostname.indexOf('eagull.net') == -1) };
+		script _gaq = window._gaq || []; _gaq.push(['_setAccount', blaze.debug ? 'UA-21159963-6' : 'UA-21159963-5'], ['_trackPageview']);
+		script(src="/lib/jquery.min.js")
+		script(src="/lib/jquery-ui.min.js")
+		script(src="/lib/jquery.timeago.js")
+		script(src="/lib/strophe.min.js")
+		script(src="/lib/strophe.muc.min.js")
+
+		!=js("xmpp.js")
+		!=js("blaze.js")
+		!=js("track.js")
+		!=js("messages.js")
+		!=js("index.js")
+
+	body
+		header
+			nav
+				ul
+					li
+						div
+							img(src='/logo.png', height='24px')
+					li
+						.logo EAGULL
+					li
+						a.btnRoom FireMoth
+					li
+						a.btnRoom(x-jid='monkeys@chat.eagull.net') Monkey Madness
+					li
+						a.btnRoom(x-jid='teaparty@chat.eagull.net') Tea Party
+					li
+						a.btnLightTemplate(x-template='frmJoinRoom') +
+			nav.hide-on-phones
+				ul
+					li
+						a.ajax(x-doc="1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80") usage guide
+					li
+						a#btnLogin login
+
+		#content
+			.row.hide-on-phones
+				.panel
+					h4 FireMoth: where users and addicts meet
+			.row
+				.six.columns.phone-four#leftPanel
+					button.tiny.black.nice.button#btnCycleSize >
+					#messages.scrollPanel
+				.six.columns.scrollPanel.hide-on-phones#rightPanel
+					.row.buttonBar
+						button.button.btnRoomContent(x-type='roster') Roster
+						button.button.btnRoomContent(x-type='video') Video
+						button.button.btnRoomContent(x-type='options') Options
+					#roomContent
+
+			.row
+				input#messageBox(placeholder="Type a message here. Hit the enter key to send.")
+
+		#templates(style='display:none')
+			form#frmXmppConfig
+				label(for='txtXmppId') Username
+					input#txtXmppId.input-text.persistent(placeholder='user@example.com')
+				label(for='txtXmppPasswd') Password
+					input#txtXmppPasswd.input-text.persistent(type='password')
+				button.btnCloseLightbox#btnSaveXmppConfig.nice.small.green.button.right Connect
+
+			form#frmNickname
+				h3 Enter a nickname
+				label Nickname
+					input.input-text.persistent#txtNickname
+				button.btnSaveNickname
+
+			form#frmJoinRoom
+				h2 Join a chatroom
+				label Invitation Code
+					input.input-text
+				button.big.nice.green.button Join
+
+			form#frmCreateRoom
+				label Name
+					input.input-text
+
+			#content-roster
+				#roster
+					.rosterItem firefly
+					.rosterItem Bubbalicious
+					.rosterItem dragon
+			#content-video
+				div http://www.youtube.com/nevergonnagiveyouup
+			#content-options
+				.buttonBar
+					button.nice.small.button.createRoom Create new room
+					button.nice.small.button.partRoom Leave this room
+					button.nice.small.button.saveLogs Save recent logs
+
+		script(src="http://www.google-analytics.com/ga.js")
+		script(src="/fancybox/jquery.fancybox.pack.js")
+		link(rel="stylesheet", href="/fancybox/jquery.fancybox.css")
+

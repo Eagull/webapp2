@@ -1,0 +1,32 @@
+{
+  "name": "eagull-webapp",
+  "subdomain": "eagull",
+  "scripts": {
+    "start": "coffee app.coffee"
+  },
+  "version": "0.0.1",
+  "author": "Aaditya Bhatia <aadityabhatia@gmail.com>",
+  "contributors": [
+    "Aaditya Bhatia <aadityabhatia@gmail.com>"
+  ],
+  "description": "the webapp that powers eagull.net",
+  "dependencies": {
+    "socket.io": "~0.9",
+    "jade": "~0.25",
+    "connect-assets": "~2.1",
+    "coffee-script": "~1.3",
+    "express": "~2.5",
+    "stylus": "~0.26"
+  },
+  "engines": {
+    "node": "v0.6.x"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git@bitbucket.org:eagull/webapp2.git"
+  },
+  "main": "app.coffee"
+}
+
