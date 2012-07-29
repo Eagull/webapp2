@@ -9,6 +9,7 @@ delayed = (delay, func) ->
 config.ROOM = if blaze.debug then 'test@chat.eagull.net' else 'firemoth@chat.eagull.net'
 
 config.nick = localStorage.getItem('nick') or 'Pikachu'
+config.nickColorMap = {}
 
 view.clearConsole = ->
 	$('#messages').html ''
@@ -17,15 +18,30 @@ view.append = (obj) ->
 	$('#messages').append obj
 
 view.log = (msg, msgClass) ->
-	divMsg = $('<div>').text msg
+	divMsg = $('<div>')
+	if typeof msg is 'string'
+		divMsg.text msg
+	else
+		divMsg.append msg
 	divMsg.addClass msgClass if msgClass
 	$('#messages').append divMsg
 	$('#messages').scrollTop $('#messages').prop('scrollHeight') unless config.sticky
 
-view.postMessage = (msg, nick) ->
-	msg = util.linkify msg
+view.postMessage = (msgText, nick, timestamp) ->
 	nick or= config.nick
-	view.log "<#{nick}> #{msg}", 'muc'
+	message = $('<span>').html $('#messageLine').html()
+	if nick not of config.nickColorMap
+		config.nickColorMap[nick] = blaze.util.randomColor(192)
+	$('.nick', message).text(nick).css('color', config.nickColorMap[nick])
+	$('.message', message).text util.linkify msgText
+
+	date = if timestamp then new Date(timestamp) else new Date()
+	timeElem = $('.timestamp', message).attr
+		title: date.toLocaleTimeString()
+		datetime: date.toISOString()
+	timeElem.timeago()
+	
+	view.log message, 'muc'
 
 view.postPrivateMessage = (msg, from, to) ->
 	msg = util.linkify msg
@@ -38,7 +54,8 @@ view.image = (src, alt) ->
 	alt or = ''
 	img = $('<img>').attr('src', src).attr('alt', alt).attr('title', alt)
 	$('#messages').append $('<div>').append img
-	img.on 'load', -> $('#messages').scrollTop $('#messages').prop('scrollHeight')
+	img.on 'load', ->
+		$('#messages').scrollTop $('#messages').prop('scrollHeight') unless config.sticky
 
 sendMessage = (msg) ->
 	msg = $.trim msg
@@ -179,8 +196,8 @@ $ ->
 
 	$('.btnRoomContent').click (e) ->
 		e.preventDefault()
-		$('.btnRoomContent').removeClass 'green'
-		$(e.target).addClass 'green'
+		$('.btnRoomContent').addClass 'secondary'
+		$(e.target).removeClass 'secondary'
 		type = e.target.getAttribute('x-type')
 		template = $('#content-' + type).html()
 		$('#roomContent').empty().append(template) if template
@@ -209,7 +226,7 @@ $ ->
 
 	repositionCycleButton = ->
 		$('#btnCycleSize').css
-			left: $('#messages').offset().left + $('#messages').outerWidth() + 1
+			left: $('#messages').offset().left + $('#messages').outerWidth() - $('#btnCycleSize').outerWidth()
 			top: $('#messages').offset().top
 
 	repositionCycleButton()
@@ -264,8 +281,8 @@ $(xmpp).bind 'groupMessage', (event, data) ->
 	if config.history.length > 10
 		config.history.shift()
 
-	view.postMessage msg, data.nick
-	
+	view.postMessage msg, data.nick, data.delay
+
 	track.event 'message', 'groupchat', if data.nick is config.nick then 'out' else 'in'
 	if data.nick isnt config.nick and msg.toLowerCase().indexOf(config.nick.toLowerCase()) isnt -1
 		view.notification

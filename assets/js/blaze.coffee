@@ -16,6 +16,14 @@ blaze.util =
 		pattern = /(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/gim
 		text.replace pattern, '<a href="$1">$1</a>'
 
+	randomColor: (lightness = 255) ->
+		getRandomInt = ->
+			randomInt = blaze.util.randomInt(lightness).toString(16)
+			if randomInt.length < 2
+				randomInt = '0' + randomInt
+			randomInt
+		'#' + getRandomInt() + getRandomInt() + getRandomInt()
+
 blaze.view =
 	notification: (opts) ->
 		return if not webkitNotifications or webkitNotifications.checkPermission() isnt 0 or document.hasFocus()

@@ -31,7 +31,8 @@ xmpp.eventMessageHandler = (msg) ->
 	bodyTags = msg.getElementsByTagName 'body'
 	return true if bodyTags.length == 0
 
-	delay = if msg.getElementsByTagName('delay').length then true else false
+	delayTags = msg.getElementsByTagName('delay')
+	delay = if delayTags.length then delayTags[0].getAttribute('stamp') else false
 
 	type = msg.getAttribute 'type'
 	if type is 'chat'

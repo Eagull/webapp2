@@ -22,6 +22,9 @@ a, a:visited
 a:hover
 	text-decoration underline
 
+a:hover.button
+	text-decoration none
+
 a
 	cursor pointer
 
@@ -126,7 +129,7 @@ header ul > li > .selected
 	top 0
 	left 0
 	right 0
-	overflow-y scroll
+	overflow-y auto
 
 #content
 	margin-top 42px
@@ -161,15 +164,19 @@ header ul > li > .selected
 
 #messages .muc
 	font-weight bold
-	color #555
+	color #888
 
 #messages .muc .message, #messages .private .message
-	margin-left 1rem
+	margin-left 0.5rem
+	color #555
 
 #messages .muc .timestamp, #messages .private .timestamp
-	magrin-left 1rem
+	float right
+	clear both
+	font-size small
 	font-style italic
-	color #888
+	margin-right 5px
+	color #aaa
 
 #btnCycleSize
 	position fixed

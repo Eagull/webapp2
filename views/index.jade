@@ -5,7 +5,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 
 		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
 		<meta http-equiv="X-UA-Compatible" content="chrome=1">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1">
 
 		<meta name="keywords" content="chatroom firemoth eagull eagle seagull gull fire moth group chat trollmoth chaosmoth groupchat">
 		<meta name="description" content="A chatroom based community, where friends and strangers can coexist!">
@@ -32,9 +32,6 @@ html(itemscope, itemtype="http://schema.org/Product")
 		script _gaq = window._gaq || []; _gaq.push(['_setAccount', blaze.debug ? 'UA-21159963-6' : 'UA-21159963-5'], ['_trackPageview']);
 		script(src="/lib/jquery.min.js")
 		script(src="/lib/jquery-ui.min.js")
-		script(src="/lib/jquery.timeago.js")
-		script(src="/lib/strophe.min.js")
-		script(src="/lib/strophe.muc.min.js")
 
 		!=js("xmpp.js")
 		!=js("blaze.js")
@@ -54,12 +51,10 @@ html(itemscope, itemtype="http://schema.org/Product")
 					li
 						a.btnRoom FireMoth
 					li
-						a.btnRoom(x-jid='monkeys@chat.eagull.net') Monkey Madness
-					li
-						a.btnRoom(x-jid='teaparty@chat.eagull.net') Tea Party
+						a.btnRoom(x-jid='trollmoth@chat.eagull.net') TrollMoth
 					li
 						a.btnLightTemplate(x-template='frmJoinRoom') +
-			nav.hide-on-phones
+			nav.hide-for-small
 				ul
 					li
 						a.ajax(x-doc="1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80") usage guide
@@ -67,18 +62,22 @@ html(itemscope, itemtype="http://schema.org/Product")
 						a#btnLogin login
 
 		#content
-			.row.hide-on-phones
+			.row.hide-for-small
 				.panel
 					h4 FireMoth: where users and addicts meet
 			.row
-				.six.columns.phone-four#leftPanel
-					button.tiny.black.nice.button#btnCycleSize >
-					#messages.scrollPanel
-				.six.columns.scrollPanel.hide-on-phones#rightPanel
-					.row.buttonBar
-						button.button.btnRoomContent(x-type='roster') Roster
-						button.button.btnRoomContent(x-type='video') Video
-						button.button.btnRoomContent(x-type='options') Options
+				.six.columns.phone-four.scrollPanel#leftPanel
+					button.tiny.black.round.secondary.button#btnCycleSize >
+					#scrollWrapper
+						#messages
+				.six.columns.scrollPanel.hide-for-small#rightPanel
+					ul.button-group.even.three-up.radius
+						li
+							a.button.secondary.btnRoomContent(x-type='roster') Roster
+						li
+							a.button.secondary.btnRoomContent(x-type='video') Video
+						li
+							a.button.secondary.btnRoomContent(x-type='options') Options
 					#roomContent
 
 			.row
@@ -121,6 +120,16 @@ html(itemscope, itemtype="http://schema.org/Product")
 					button.nice.small.button.partRoom Leave this room
 					button.nice.small.button.saveLogs Save recent logs
 
+			#messageLine
+				| <
+				span.nick
+				| >
+				span.message
+				time.timestamp
+
+		script(src="/lib/jquery.timeago.js")
+		script(src="/lib/strophe.min.js")
+		script(src="/lib/strophe.muc.min.js")
 		script(src="http://www.google-analytics.com/ga.js")
 		script(src="/fancybox/jquery.fancybox.pack.js")
 		link(rel="stylesheet", href="/fancybox/jquery.fancybox.css")
