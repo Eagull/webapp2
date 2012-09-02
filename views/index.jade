@@ -25,7 +25,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 		link(rel='icon', type='image/x-icon', href="/favicon.ico")
 		link(href='http://fonts.googleapis.com/css?family=Architects+Daughter', rel='stylesheet', type='text/css')
 
-		!=css('foundation.css')
+		link(href='/lib/bootstrap.css', rel='stylesheet', type='text/css')
 		!=css('global.css')
 
 		script window.blaze = { version: "#{version}", debug: (location.hostname.indexOf('eagull.net') == -1) };
@@ -40,48 +40,56 @@ html(itemscope, itemtype="http://schema.org/Product")
 		!=js("index.js")
 
 	body
-		header
-			nav
-				ul
-					li
-						div
-							img(src='/logo.png', height='24px')
-					li
-						.logo EAGULL
-					li
-						a.btnRoom FireMoth
-					li
-						a.btnRoom(x-jid='trollmoth@chat.eagull.net') TrollMoth
-					li
-						a.btnLightTemplate(x-template='frmJoinRoom') +
-			nav.hide-for-small
-				ul
-					li
-						a.ajax(x-doc="1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80") usage guide
-					li
-						a#btnLogin login
+		.navbar.navbar-inverse.navbar-fixed-top
+			.navbar-inner
+				.container-fluid
+					a.brand.ajax(x-doc="1yaENZvhsLU81SWfp01AzGlarOTOKRQ_CKbkVxOh6j10") EAGULL
+					ul.nav
+						li
+							a.btnRoom FireMoth
+						li
+							a.btnRoom(x-jid='trollmoth@chat.eagull.net') TrollMoth
+						li
+							a.btnLightTemplate(x-template='frmJoinRoom') +
+					ul.nav.pull-right
+						li
+							a.ajax(x-doc="1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80") usage guide
+						li
+							a login
+					ul.visible-desktop.nav.pull-right
+						li.dropdown
+							a.dropdown-toggle(data-toggle="dropdown") options
+								b.caret
+							ul.dropdown-menu
+								li
+									a.createRoom create new room
+								li
+									a.partRoom leave this room
+								li
+									a.saveLogs save recent logs
+						li.dropdown
+							a.dropdown-toggle(data-toggle="dropdown") widgets
+								b.caret
+							ul.dropdown-menu
+								li
+									a.btnRoomContent(x-type='roster') users
+								li
+									a.btnRoomContent(x-type='video') video
 
-		#content
-			.row.hide-for-small
-				.panel
-					h4 FireMoth: where users and addicts meet
-			.row
-				.six.columns.phone-four.scrollPanel#leftPanel
-					button.tiny.black.round.secondary.button#btnCycleSize >
+		#nav-spacer.hidden-phone
+		#content.container-fluid
+			.row-fuild
+				.span12
+					pre#topicContainer(style="display:none")
+						h4#topic
+			.row-fuild
+				.span12.scrollPanel#leftPanel
 					#scrollWrapper
 						#messages
-				.six.columns.scrollPanel.hide-for-small#rightPanel
-					ul.button-group.even.three-up.radius
-						li
-							a.button.secondary.btnRoomContent(x-type='roster') Roster
-						li
-							a.button.secondary.btnRoomContent(x-type='video') Video
-						li
-							a.button.secondary.btnRoomContent(x-type='options') Options
-					#roomContent
-
-			.row
-				input#messageBox(placeholder="Type a message here. Hit the enter key to send.")
+				.span4.scrollPanel#rightPanel(style="display:none")
+					button.btn.btn-mini.btn-inverse#btnCollapseContent x
+					#contentPanel
+			input#messageBox(placeholder="Type a message here. Hit the enter key to send.")
 
 		#templates(style='display:none')
 			form#frmXmppConfig
@@ -114,11 +122,6 @@ html(itemscope, itemtype="http://schema.org/Product")
 					.rosterItem dragon
 			#content-video
 				div http://www.youtube.com/nevergonnagiveyouup
-			#content-options
-				.buttonBar
-					button.nice.small.button.createRoom Create new room
-					button.nice.small.button.partRoom Leave this room
-					button.nice.small.button.saveLogs Save recent logs
 
 			#messageLine
 				| <
@@ -127,10 +130,20 @@ html(itemscope, itemtype="http://schema.org/Product")
 				span.message
 				time.timestamp
 
+			#privateMessageLine
+				| [
+				span.nickFrom
+				|  -> 
+				span.nickTo
+				| ]
+				span.message
+				time.timestamp
+
 		script(src="/lib/jquery.timeago.js")
 		script(src="/lib/strophe.min.js")
 		script(src="/lib/strophe.muc.min.js")
 		script(src="http://www.google-analytics.com/ga.js")
 		script(src="/fancybox/jquery.fancybox.pack.js")
+		script(src="/lib/bootstrap.js")
 		link(rel="stylesheet", href="/fancybox/jquery.fancybox.css")
 

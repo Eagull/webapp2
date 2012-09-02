@@ -1,6 +1,5 @@
 body
 	font-family sans-serif
-	margin 0
 	font-size small
 	background-color #f8f8f8
 
@@ -28,10 +27,6 @@ a:hover.button
 a
 	cursor pointer
 
-.row
-	max-width 100%
-	width 100%
-
 .upperPanel
 	position absolute
 	top 0
@@ -42,82 +37,13 @@ a
 	top -10rem
 	bottom 0
 
-header
-	color #fff
-	background-color #2D2D2D
-	border-bottom 2px solid #002200
-	height 30px
-	height 3rem
-	opacity 1
-	position fixed
-	top 0
-	left 0
-	right 0
-	width 100%
-	z-index 990
-
-header a
-	color #ccc !important
-	font-weight normal
-	display block
-	text-decoration none !important
-	border-left 5px solid transparent
-	border-right 5px solid transparent
-	position relative
-	z-index 1000
-
-header a:hover
-	color #fff !important
-
-header > nav
-	display block
-	text-decoration none !important
-	height 30px
-	position absolute
-	top 0
-	white-space nowrap
-	z-index 1000
-
-header > nav:first-child
-	left 0
-	padding-left 8px
-
-header > nav:last-child
-	padding-right 8px
-	right 0
-
 header img
 	height 24px
 
-header ul
-	display block
-	list-style none outside none
-	margin 0
-	padding 0
-
-header ul > li
-	position relative
-	display -moz-inline-box
-	display inline-block
-	line-height 27px
-	padding 0
-	vertical-align top
-
-header ul > li > *
-	padding 0 5px
-	border-top 2px solid transparent
-	height 27px
-
-header ul > li > .selected
-	border-top-color #4bdd39 !important
-	font-weight bold
-	color #fff !important
-
-.logo
+.navbar .brand
 	font-family 'Architects Daughter', cursive
 	font-weight bold
-	font-size 27px
-	color #ccc
+	font-size 30px
 
 .text
 	font-size 1.2em
@@ -129,10 +55,11 @@ header ul > li > .selected
 	top 0
 	left 0
 	right 0
+	overflow-x hidden
 	overflow-y auto
 
-#content
-	margin-top 42px
+#nav-spacer
+	margin-top 55px
 
 #rightPanel
 	overflow-y auto
@@ -142,10 +69,11 @@ header ul > li > .selected
 	bottom 0
 	right 0
 	left 0
-	height 3rem
-	padding 0.5rem
+	height 2rem
+	padding 0.4rem
 	width 100%
-	font-size 2rem
+	font-size 1.3rem
+	background-color #EEF
 
 .buttonBar button
 	margin 0.5em
@@ -178,6 +106,6 @@ header ul > li > .selected
 	margin-right 5px
 	color #aaa
 
-#btnCycleSize
-	position fixed
+#btnCollapseContent
+	float right
 

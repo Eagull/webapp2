@@ -4,7 +4,7 @@
   "scripts": {
     "start": "coffee app.coffee"
   },
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "Aaditya Bhatia <aadityabhatia@gmail.com>",
   "contributors": [
     "Aaditya Bhatia <aadityabhatia@gmail.com>"
@@ -19,7 +19,7 @@
     "stylus": "~0.26"
   },
   "engines": {
-    "node": "v0.6.x"
+    "node": "v0.8.x"
   },
   "devDependencies": {},
   "optionalDependencies": {},
@@ -29,4 +29,3 @@
   },
   "main": "app.coffee"
 }
-

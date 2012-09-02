@@ -29,7 +29,18 @@ xmpp.part = (room, msg) ->
 
 xmpp.eventMessageHandler = (msg) ->
 	bodyTags = msg.getElementsByTagName 'body'
-	return true if bodyTags.length == 0
+	if bodyTags.length == 0
+		subjectTags = msg.getElementsByTagName('subject')
+		if subjectTags.length == 0
+			return true
+		room = Strophe.getBareJidFromJid(msg.getAttribute 'from')
+		subject = $('<div>').html(Strophe.getText(subjectTags[0])).text()
+		if room of xmpp.rooms
+			xmpp.rooms[room].subject = subject
+		$(xmpp).triggerHandler 'subject',
+			room: room
+			subject: subject
+		return true
 
 	delayTags = msg.getElementsByTagName('delay')
 	delay = if delayTags.length then delayTags[0].getAttribute('stamp') else false
@@ -161,7 +172,7 @@ xmpp.connect = (id, passwd, service) ->
 	passwd or= ''
 	xmpp.conn.connect id, passwd, onConnect
 
-	if blaze.debug
+	if localStorage and localStorage.getItem('xmpp-debug')
 		xmpp.conn.rawInput = (data) ->
 			console.debug "RECV: " + data
 		xmpp.conn.rawOutput = (data) ->

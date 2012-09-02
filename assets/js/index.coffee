@@ -7,15 +7,30 @@ delayed = (delay, func) ->
 	setTimeout func, delay
 
 config.ROOM = if blaze.debug then 'test@chat.eagull.net' else 'firemoth@chat.eagull.net'
-
 config.nick = localStorage.getItem('nick') or 'Pikachu'
 config.nickColorMap = {}
 
 view.clearConsole = ->
 	$('#messages').html ''
 
-view.append = (obj) ->
+view.topic = (topic) ->
+	if topic
+		$('#topic').text topic
+		$('#topicContainer').slideDown ->
+			$(window).resize()
+	else
+		$('#topicContainer').slideUp ->
+			$(window).resize()
+			$('#topic').text topic
+
+view.appendMessage = (obj) ->
+	$leftPanel = $('#leftPanel')
+	# auto-scroll if panel is scrolled up by up to SCROLL_MARGIN pixels
+	SCROLL_MARGIN = 100
+	doScroll = ($leftPanel.prop('scrollHeight') - $leftPanel.scrollTop() - $leftPanel.height() < SCROLL_MARGIN)
 	$('#messages').append obj
+	if doScroll
+		$leftPanel.scrollTop($leftPanel.prop('scrollHeight'))
 
 view.log = (msg, msgClass) ->
 	divMsg = $('<div>')
@@ -24,11 +39,9 @@ view.log = (msg, msgClass) ->
 	else
 		divMsg.append msg
 	divMsg.addClass msgClass if msgClass
-	$('#messages').append divMsg
-	$('#messages').scrollTop $('#messages').prop('scrollHeight') unless config.sticky
+	view.appendMessage divMsg
 
 view.postMessage = (msgText, nick, timestamp) ->
-	nick or= config.nick
 	message = $('<span>').html $('#messageLine').html()
 	if nick not of config.nickColorMap
 		config.nickColorMap[nick] = blaze.util.randomColor(192)
@@ -40,22 +53,30 @@ view.postMessage = (msgText, nick, timestamp) ->
 		title: date.toLocaleTimeString()
 		datetime: date.toISOString()
 	timeElem.timeago()
-	
+
 	view.log message, 'muc'
 
-view.postPrivateMessage = (msg, from, to) ->
-	msg = util.linkify msg
-	view.log "[#{from} -> #{to}] #{msg}", 'private'
+view.postPrivateMessage = (msgText, nickFrom, nickTo, timestamp) ->
+	message = $('<span>').html $('#privateMessageLine').html()
+	if nickFrom not of config.nickColorMap
+		config.nickColorMap[nickFrom] = blaze.util.randomColor(192)
+	if nickTo not of config.nickColorMap
+		config.nickColorMap[nickTo] = blaze.util.randomColor(192)
+
+	$('.nickFrom', message).text(nickFrom).css('color', config.nickColorMap[nickFrom])
+	$('.nickTo', message).text(nickTo).css('color', config.nickColorMap[nickTo])
+	$('.message', message).text util.linkify msgText
+
+	date = if timestamp then new Date(timestamp) else new Date()
+	timeElem = $('.timestamp', message).attr
+		title: date.toLocaleTimeString()
+		datetime: date.toISOString()
+	timeElem.timeago()
+
+	view.log message, 'muc'
 
 view.postStatus = (msg) ->
 	view.log msg, 'status'
-
-view.image = (src, alt) ->
-	alt or = ''
-	img = $('<img>').attr('src', src).attr('alt', alt).attr('title', alt)
-	$('#messages').append $('<div>').append img
-	img.on 'load', ->
-		$('#messages').scrollTop $('#messages').prop('scrollHeight') unless config.sticky
 
 sendMessage = (msg) ->
 	msg = $.trim msg
@@ -129,26 +150,6 @@ commands =
 			view.postMessage msg.text, msg.nick
 		true
 
-	xkcd: (args) ->
-		num = args.shift()
-		num = if num and not isNaN(num) then num else ''
-		if config.xkcdlatest and num and num > config.xkcdlatest
-			view.postStatus blaze.messages.invalidInput.random()
-			return false
-		url = 'http://dynamic.xkcd.com/api-0/jsonp/comic/' + num
-		$.ajax
-			url: url
-			cache: true
-			success: (data) ->
-				view.postStatus "(#{data.num}) #{data.title}"
-				view.image(data.img, data.alt)
-				if not num
-					config.xkcdlatest = data.num
-			error: -> view.postStatus blaze.messages.resultUnavailable.random()
-			dataType: 'jsonp'
-			jsonpCallback: -> "cb" + Date.now()
-		true
-
 $ ->
 	$("input.persistent, textarea.persistent").each (index, element) ->
 		value = localStorage.getItem 'field-' + (element.name || element.id)
@@ -194,13 +195,21 @@ $ ->
 		if room not of xmpp.rooms then xmpp.join room, config.nick
 		config.currentRoom = room
 
+	$('.dropdown-menu a').click -> $('.dropdown.open .dropdown-toggle').dropdown('toggle');
+
 	$('.btnRoomContent').click (e) ->
 		e.preventDefault()
-		$('.btnRoomContent').addClass 'secondary'
-		$(e.target).removeClass 'secondary'
+		$('#leftPanel').switchClass('span12', 'span8', 500)
+		delayed 510, ->
+			$('#rightPanel').fadeIn()
 		type = e.target.getAttribute('x-type')
 		template = $('#content-' + type).html()
-		$('#roomContent').empty().append(template) if template
+		$('#contentPanel').empty().append(template) if template
+
+	$('#btnCollapseContent').click ->
+		$('#rightPanel').fadeOut(500)
+		delayed 510, ->
+			$('#leftPanel').switchClass('span8', 'span12')
 
 	$('#btnLogin').click ->
 		view.lightbox $('#frmXmppConfig'),
@@ -219,37 +228,10 @@ $ ->
 
 	$(window).resize ->
 		view.cache or= {}
-		view.cache.messagesTop or= $('#messages').offset().top
+		messagesTop = $('#leftPanel').offset().top
 		view.cache.messageBoxHeight or= $('#messageBox').outerHeight()
-		$('.scrollPanel').height(window.innerHeight - view.cache.messagesTop - view.cache.messageBoxHeight - 5)
+		$('.scrollPanel').height(window.innerHeight - messagesTop - view.cache.messageBoxHeight - 10)
 	$(window).resize()
-
-	repositionCycleButton = ->
-		$('#btnCycleSize').css
-			left: $('#messages').offset().left + $('#messages').outerWidth() - $('#btnCycleSize').outerWidth()
-			top: $('#messages').offset().top
-
-	repositionCycleButton()
-	config.viewMode = 0
-
-	$('#btnCycleSize').click ->
-		$('#btnCycleSize').hide()
-		delayed 700, ->
-			repositionCycleButton()
-			$('#btnCycleSize').fadeIn()
-
-		if config.viewMode is 0
-			$('#rightPanel').switchClass('six', 'four', 500)
-			delayed 10, ->
-				$('#leftPanel').switchClass('six', 'eight', 500)
-			$('#btnCycleSize').text '<'
-			config.viewMode++
-		else
-			$('#leftPanel').switchClass 'eight', 'six', 500
-			delayed 10, ->
-				$('#rightPanel').switchClass 'four', 'six', 500
-			$('#btnCycleSize').text '>'
-			config.viewMode = 0
 
 	xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val()
 
@@ -262,7 +244,7 @@ $(xmpp).bind 'connecting error authenticating authfail connected connfail discon
 
 $(xmpp).bind 'error authfail connfail disconnected', (event) ->
 	view.postStatus "Connection Status: " + event.type
-	view.append $('<button>').text("Reconnect").click ->
+	view.appendMessage $('<button>').text("Reconnect").click ->
 		view.clearConsole()
 		xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val()
 
@@ -271,7 +253,12 @@ $(xmpp).bind 'connecting disconnecting', (event) ->
 
 $(xmpp).bind 'connected', (event) ->
 	view.clearConsole()
-	view.postStatus "Connected to the chat server. Please join one of our awesome rooms."
+	xmpp.join config.ROOM, config.nick
+	config.currentRoom = config.ROOM
+
+$(xmpp).bind 'subject', (event, data) ->
+	if data.room is config.currentRoom
+		view.topic data.subject
 
 $(xmpp).bind 'groupMessage', (event, data) ->
 	msg = $.trim(data.text)
