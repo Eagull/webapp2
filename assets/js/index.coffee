@@ -224,7 +224,10 @@ $ ->
 		view.cache or= {}
 		messagesTop = $('#leftPanel').offset().top
 		view.cache.messageBoxHeight or= $('#messageBox').outerHeight()
+		$leftPanel = $('#leftPanel')
+		scrollBottom = $leftPanel.scrollTop()  + $leftPanel.height()
 		$('.scrollPanel').height(window.innerHeight - messagesTop - view.cache.messageBoxHeight - 10)
+		$leftPanel.scrollTop(scrollBottom - $leftPanel.height())
 	$(window).resize()
 
 	xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val()
