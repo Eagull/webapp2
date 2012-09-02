@@ -14,14 +14,8 @@ view.clearConsole = ->
 	$('#messages').html ''
 
 view.topic = (topic) ->
-	if topic
-		$('#topic').text topic
-		$('#topicContainer').slideDown ->
-			$(window).resize()
-	else
-		$('#topicContainer').slideUp ->
-			$(window).resize()
-			$('#topic').text topic
+	$('#topic').text topic or config.joinedRoom
+	$('#topicContainer').slideDown(-> $(window).resize())
 
 view.appendMessage = (obj) ->
 	$leftPanel = $('#leftPanel')
@@ -99,7 +93,7 @@ sendMessage = (msg) ->
 				track.event 'message', 'chat', 'out'
 				return
 
-	if config.currentRoom and config.currentRoom of xmpp.rooms
+	if config.joinedRoom and config.joinedRoom of xmpp.rooms
 		xmpp.conn.muc.groupchat config.joinedRoom, msg
 	else
 		view.postStatus blaze.messages.actionImpossible.random()
@@ -193,7 +187,7 @@ $ ->
 		room = e.target.getAttribute 'x-jid'
 		if not room then room = config.ROOM
 		if room not of xmpp.rooms then xmpp.join room, config.nick
-		config.currentRoom = room
+		config.joinedRoom = room
 
 	$('.dropdown-menu a').click -> $('.dropdown.open .dropdown-toggle').dropdown('toggle');
 
@@ -254,10 +248,10 @@ $(xmpp).bind 'connecting disconnecting', (event) ->
 $(xmpp).bind 'connected', (event) ->
 	view.clearConsole()
 	xmpp.join config.ROOM, config.nick
-	config.currentRoom = config.ROOM
+	config.joinedRoom = config.ROOM
 
 $(xmpp).bind 'subject', (event, data) ->
-	if data.room is config.currentRoom
+	if data.room is config.joinedRoom
 		view.topic data.subject
 
 $(xmpp).bind 'groupMessage', (event, data) ->
@@ -289,6 +283,7 @@ $(xmpp).bind 'privateMessage', (event, data) ->
 $(xmpp).bind 'joined', (event, data) ->
 	if data.nick is config.nick
 		config.joinedRoom = data.room
+		view.topic()
 	else
 		view.postStatus messages.joined.random().replace '{nick}', data.nick
 
