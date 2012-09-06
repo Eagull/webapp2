@@ -16,9 +16,12 @@ blaze.collections.Messages = Backbone.Collection.extend
 blaze.views.MessageView = Backbone.View.extend
 	el: '#messages'
 
+	tpl: {}
+
 	initialize: ->
-		@messageHtml = $('#messageLine').html();
-		@privateMessageHtml = $('#privateMessageLine').html();
+		@tpl.message = $('#tplMessage').html();
+		@tpl.privateMessage = $('#tplPrivateMessage').html();
+		@tpl.action = $('#tplAction').html();
 		@$leftPanel = @$el.parent()
 		@nickColorMap = {}
 		@render() if @collection
@@ -70,7 +73,14 @@ blaze.views.MessageView = Backbone.View.extend
 		this
 
 	postMucMessage: (msgText, nick, timestamp) ->
-		message = $('<span>').html @messageHtml
+		msgText = msgText.trim()
+		return if not msgText
+		
+		if msgText.substr(0,4) is '/me '
+			msgText = msgText.substr(4)
+			message = $('<span>').html @tpl.action
+		else
+			message = $('<span>').html @tpl.message
 		if nick not of @nickColorMap
 			@nickColorMap[nick] = blaze.util.randomColor(192)
 		$('.nick', message).text(nick).css('color', @nickColorMap[nick])
@@ -86,7 +96,7 @@ blaze.views.MessageView = Backbone.View.extend
 		this
 
 	postPrivateMessage: (msgText, nickFrom, nickTo, timestamp) ->
-		message = $('<span>').html @privateMessageHtml
+		message = $('<span>').html @tpl.privateMessage
 		if nickFrom not of @nickColorMap
 			@nickColorMap[nickFrom] = blaze.util.randomColor(192)
 		if nickTo not of @nickColorMap
@@ -106,6 +116,8 @@ blaze.views.MessageView = Backbone.View.extend
 		this
 
 	postStatus: (msg) ->
-		@append msg, 'status'
+		msgEl = $('<span>').html msg
+		msgEl.attr 'title', new Date().toLocaleTimeString()
+		@append msgEl, 'status'
 		this
 

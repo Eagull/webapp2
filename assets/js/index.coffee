@@ -256,6 +256,7 @@ $(xmpp).bind 'groupMessage', (event, data) ->
 	track.event 'message', 'groupchat', if data.nick is nick then 'out' else 'in'
 	if config.notifications and not data.self and not data.delay
 		if msg.toLowerCase().indexOf(nick.toLowerCase()) isnt -1
+			if msg.substr(0,4) is '/me ' then msg = "*#{msg.substr(4)}*"
 			view.notification
 				title: "#{data.nick} (#{data.room})"
 				body: msg

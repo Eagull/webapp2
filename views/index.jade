@@ -127,14 +127,20 @@ html(itemscope, itemtype="http://schema.org/Product")
 			#content-video
 				div http://www.youtube.com/nevergonnagiveyouup
 
-			#messageLine
+			#tplMessage
 				| <
 				span.nick
 				| >
 				span.message
 				time.timestamp
 
-			#privateMessageLine
+			#tplAction
+				| * 
+				span.nick
+				span.message
+				time.timestamp
+
+			#tplPrivateMessage
 				| [
 				span.nickFrom
 				|  -> 
