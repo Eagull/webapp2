@@ -27,7 +27,21 @@ xmpp.part = (room, msg) ->
 	p.c('status', null, msg) if msg
 	xmpp.conn.send p
 
-xmpp.eventMessageHandler = (msg) ->
+xmpp.messageHandlerProxy = (msg) ->
+	try
+		xmpp.messageHandler(msg)
+	catch error
+		console.error error.stack
+	return true
+
+xmpp.mucPresenceHandlerProxy = (p) ->
+	try
+		xmpp.mucPresenceHandler(p)
+	catch error
+		console.error error.stack
+	return true
+
+xmpp.messageHandler = (msg) ->
 	room = Strophe.getBareJidFromJid(msg.getAttribute 'from')
 	return if not room of xmpp.rooms
 
@@ -166,8 +180,8 @@ onConnect = (status) ->
 
 		when Strophe.Status.CONNECTED
 			console.log 'Strophe is connected.'
-			xmpp.conn.addHandler xmpp.eventMessageHandler, null, 'message'
-			xmpp.conn.addHandler xmpp.mucPresenceHandler, null, 'presence'
+			xmpp.conn.addHandler xmpp.messageHandlerProxy, null, 'message'
+			xmpp.conn.addHandler xmpp.mucPresenceHandlerProxy, null, 'presence'
 			xmpp.conn.send $pres().tree()
 			$(xmpp).triggerHandler 'connected'
 
