@@ -32,21 +32,24 @@ html(itemscope, itemtype="http://schema.org/Product")
 		script _gaq = window._gaq || []; _gaq.push(['_setAccount', blaze.debug ? 'UA-21159963-6' : 'UA-21159963-5'], ['_trackPageview']);
 		script(src="/lib/jquery.min.js")
 		script(src="/lib/jquery-ui.min.js")
+		script(src="/lib/underscore.js")
+		script(src="/lib/backbone.js")
 
 		!=js("xmpp.js")
 		!=js("blaze.js")
 		!=js("track.js")
 		!=js("messages.js")
+		!=js("mvc.js")
 		!=js("index.js")
 
 	body
 		.navbar.navbar-inverse.navbar-fixed-top
 			.navbar-inner
 				.container-fluid
-					a.brand.ajax(x-doc="1yaENZvhsLU81SWfp01AzGlarOTOKRQ_CKbkVxOh6j10") EAGULL
+					a.brand EAGULL
 					ul.nav
 						li
-							a.btnRoom FireMoth
+							a.btnRoom(x-jid='DEFAULT') FireMoth
 						li
 							a.btnRoom(x-jid='trollmoth@chat.eagull.net') TrollMoth
 						li
@@ -61,6 +64,8 @@ html(itemscope, itemtype="http://schema.org/Product")
 							a.dropdown-toggle(data-toggle="dropdown") options
 								b.caret
 							ul.dropdown-menu
+								li
+									a.toggleNotifications enable notifications
 								li
 									a.createRoom create new room
 								li
@@ -84,8 +89,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 						h4#topic
 			.row-fuild
 				.span12.scrollPanel#leftPanel
-					#scrollWrapper
-						#messages
+					#messages
 				.span4.scrollPanel#rightPanel(style="display:none")
 					button.btn.btn-mini.btn-inverse#btnCollapseContent x
 					#contentPanel

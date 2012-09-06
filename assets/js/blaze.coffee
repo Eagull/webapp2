@@ -1,5 +1,4 @@
 blaze = window.blaze or = {}
-config = blaze.config or = {}
 
 Array.prototype.random = () -> @[Math.floor((Math.random()*@length))];
 
@@ -26,11 +25,26 @@ blaze.util =
 
 blaze.view =
 	notification: (opts) ->
-		return if not webkitNotifications or webkitNotifications.checkPermission() isnt 0 or document.hasFocus()
+		return false if typeof webkitNotifications is 'undefined' or not webkitNotifications
+		return false if webkitNotifications.checkPermission() isnt 0
+		return false if document.hasFocus() and not opts.force
 		notification = webkitNotifications.createNotification "/logo16.png", opts.title or "", opts.body or ""
-		notification.onclick = -> window.focus(); @cancel()
+		notification.onclick = ->
+			window.focus()
+			opts.callback() if typeof opts.callback is 'function'
+			@cancel()
 		notification.show()
 		setTimeout (-> notification.cancel()), opts.timeout or 15000, notification
+
+	requestNotificationPermission: (callback) ->
+		return false if typeof webkitNotifications is 'undefined' or not webkitNotifications
+		return true if webkitNotifications.checkPermission() is 0
+		if webkitNotifications.checkPermission() is 1
+			if typeof callback is 'function'
+				webkitNotifications.requestPermission callback
+			else
+				webkitNotifications.requestPermission()
+		return false
 
 	lightbox: (content, opts) ->
 		$.extend opts,

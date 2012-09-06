@@ -4,7 +4,7 @@
   "scripts": {
     "start": "coffee app.coffee"
   },
-  "version": "0.0.3",
+  "version": "0.0.4",
   "author": "Aaditya Bhatia <aadityabhatia@gmail.com>",
   "contributors": [
     "Aaditya Bhatia <aadityabhatia@gmail.com>"

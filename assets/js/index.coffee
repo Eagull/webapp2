@@ -7,70 +7,36 @@ delayed = (delay, func) ->
 	setTimeout func, delay
 
 config.ROOM = if blaze.debug then 'test@chat.eagull.net' else 'firemoth@chat.eagull.net'
-config.nick = localStorage.getItem('nick') or 'Pikachu'
-config.nickColorMap = {}
+NICK_LIST = ["Abra", "Charmander", "Jigglypuff", "Metapod", "Pikachu", "Psyduck", "Squirtle"]
 
-view.clearConsole = ->
-	$('#messages').html ''
+messageView = {}
+messageBin = {}
+Message = blaze.models.Message
 
 view.topic = (topic) ->
-	$('#topic').text topic or config.joinedRoom
+	if not topic and config.currentRoom of xmpp.rooms
+		topic = xmpp.rooms[config.currentRoom].subject
+	$('#topic').text topic or config.currentRoom
 	$('#topicContainer').slideDown(-> $(window).resize())
 
-view.appendMessage = (obj) ->
-	$leftPanel = $('#leftPanel')
-	# auto-scroll if panel is scrolled up by up to SCROLL_MARGIN pixels
-	SCROLL_MARGIN = 100
-	doScroll = ($leftPanel.prop('scrollHeight') - $leftPanel.scrollTop() - $leftPanel.height() < SCROLL_MARGIN)
-	$('#messages').append obj
-	if doScroll
-		$leftPanel.scrollTop($leftPanel.prop('scrollHeight'))
-
-view.log = (msg, msgClass) ->
-	divMsg = $('<div>')
-	if typeof msg is 'string'
-		divMsg.text msg
+joinRoom = (room, nick) ->
+	if room not of messageBin
+		messageBin[room] = new blaze.collections.Messages()
+	if room not of xmpp.rooms
+		messageBin[room].reset()
+		xmpp.join room, nick or localStorage.getItem('nick') or NICK_LIST.random()
+		$.fancybox.showLoading()
 	else
-		divMsg.append msg
-	divMsg.addClass msgClass if msgClass
-	view.appendMessage divMsg
+		switchRoom room
 
-view.postMessage = (msgText, nick, timestamp) ->
-	message = $('<span>').html $('#messageLine').html()
-	if nick not of config.nickColorMap
-		config.nickColorMap[nick] = blaze.util.randomColor(192)
-	$('.nick', message).text(nick).css('color', config.nickColorMap[nick])
-	$('.message', message).text util.linkify msgText
-
-	date = if timestamp then new Date(timestamp) else new Date()
-	timeElem = $('.timestamp', message).attr
-		title: date.toLocaleTimeString()
-		datetime: date.toISOString()
-	timeElem.timeago()
-
-	view.log message, 'muc'
-
-view.postPrivateMessage = (msgText, nickFrom, nickTo, timestamp) ->
-	message = $('<span>').html $('#privateMessageLine').html()
-	if nickFrom not of config.nickColorMap
-		config.nickColorMap[nickFrom] = blaze.util.randomColor(192)
-	if nickTo not of config.nickColorMap
-		config.nickColorMap[nickTo] = blaze.util.randomColor(192)
-
-	$('.nickFrom', message).text(nickFrom).css('color', config.nickColorMap[nickFrom])
-	$('.nickTo', message).text(nickTo).css('color', config.nickColorMap[nickTo])
-	$('.message', message).text util.linkify msgText
-
-	date = if timestamp then new Date(timestamp) else new Date()
-	timeElem = $('.timestamp', message).attr
-		title: date.toLocaleTimeString()
-		datetime: date.toISOString()
-	timeElem.timeago()
-
-	view.log message, 'muc'
-
-view.postStatus = (msg) ->
-	view.log msg, 'status'
+switchRoom = (room) ->
+	return if room not of xmpp.rooms
+	$.fancybox.hideLoading()
+	$('li.active').removeClass 'active'
+	$(".btnRoom[x-jid='#{room}']").parent().addClass 'active'
+	config.currentRoom = room
+	messageView.setCollection(messageBin[room])
+	view.topic()
 
 sendMessage = (msg) ->
 	msg = $.trim msg
@@ -86,65 +52,62 @@ sendMessage = (msg) ->
 	if msg[0] is '@'
 		nick = msg.substr(1).split(' ', 1)[0]
 		message = msg.substr(msg.indexOf(' ')).trim()
-		if config.joinedRoom
-			if xmpp.rooms[config.joinedRoom].roster.indexOf(nick) isnt -1
-				xmpp.send config.joinedRoom + '/' + nick, message, type: 'chat'
-				view.postPrivateMessage message, config.nick, nick
+		if config.currentRoom
+			if xmpp.rooms[config.currentRoom].roster.indexOf(nick) isnt -1
+				xmpp.send config.currentRoom + '/' + nick, message, type: 'chat'
+				messageBin[config.currentRoom].add new Message
+					type: 'private'
+					text: message
+					from: xmpp.rooms[config.currentRoom].nick
+					to: nick
 				track.event 'message', 'chat', 'out'
 				return
 
-	if config.joinedRoom and config.joinedRoom of xmpp.rooms
-		xmpp.conn.muc.groupchat config.joinedRoom, msg
+	if config.currentRoom and config.currentRoom of xmpp.rooms
+		xmpp.conn.muc.groupchat config.currentRoom, msg
 	else
-		view.postStatus blaze.messages.actionImpossible.random()
+		messageView.postStatus blaze.messages.actionImpossible.random()
 
 commands =
 	help: ->
 		commandList = []
 		$.each commands, (i) ->
 			commandList.push "/#{i}"
-		view.postStatus "Commands: " + commandList.join(', ')
+		messageView.postStatus "Commands: " + commandList.join(', ')
 		true
 
 	pm: ->
-		view.postStatus "To PM someone, type @ followed by their nickname, then a space, then the message. Good luck!"
+		messageView.postStatus "To PM someone, type @ followed by their nickname, then a space, then the message. Good luck!"
 		true
 
 	nick: (args) ->
 		newNick = args.shift()
 		if not newNick
-			view.postStatus "Syntax: /nick {desired nickname}"
+			messageView.postStatus "Syntax: /nick {desired nickname}"
 			return true
-		if not config.joinedRoom
-			view.postStatus messages.actionImpossible.random()
+		if not config.currentRoom
+			messageView.postStatus messages.actionImpossible.random()
 			return true
 		if not /^[a-zA-Z](\w)*$/.test(newNick)
-			view.postStatus messages.invalidInput.random()
+			messageView.postStatus messages.invalidInput.random()
 			return false
 		if newNick.length > 20
-			view.postStatus messages.invalidInput.random()
+			messageView.postStatus messages.invalidInput.random()
 			return false
 		else
-			xmpp.conn.muc.changeNick config.joinedRoom, newNick
+			xmpp.conn.muc.changeNick config.currentRoom, newNick
 		true
 
 	users: ->
-		if not config.joinedRoom
-			view.postStatus "You need to be in a room before you ask for the list of occupants."
+		if not config.currentRoom
+			messageView.postStatus "You need to be in a room before you ask for the list of occupants."
 		else
-			view.postStatus "Users: " + xmpp.rooms[config.joinedRoom].roster.join(', ')
-		true
-
-	history: ->
-		if not config.history
-			view.postStatus "I have nothing for you."
-			return true
-		while config.history.length > 0
-			msg = config.history.shift()
-			view.postMessage msg.text, msg.nick
+			messageView.postStatus "Users: " + xmpp.rooms[config.currentRoom].roster.join(', ')
 		true
 
 $ ->
+	messageView = new blaze.views.MessageView()
+
 	$("input.persistent, textarea.persistent").each (index, element) ->
 		value = localStorage.getItem 'field-' + (element.name || element.id)
 		element.value = value if value
@@ -159,7 +122,7 @@ $ ->
 	$('#messageBox').keydown (e) ->
 		if e.which is 9
 			e.preventDefault()
-			view.postStatus messages.resultUnavailable.random()
+			messageView.postStatus messages.resultUnavailable.random()
 		if e.which is 13
 			e.preventDefault()
 			sendMessage e.target.value, "Me"
@@ -180,14 +143,12 @@ $ ->
 			dataType: 'jsonp'
 			jsonpCallback: -> "cb" + Date.now()
 
+	$('.btnRoom[x-jid="DEFAULT"]').attr 'x-jid', config.ROOM
+
 	$('.btnRoom').click (e) ->
 		e.preventDefault()
-		$('.btnRoom').removeClass 'selected'
-		$(e.target).addClass 'selected'
 		room = e.target.getAttribute 'x-jid'
-		if not room then room = config.ROOM
-		if room not of xmpp.rooms then xmpp.join room, config.nick
-		config.joinedRoom = room
+		joinRoom room
 
 	$('.dropdown-menu a').click -> $('.dropdown.open .dropdown-toggle').dropdown('toggle');
 
@@ -209,6 +170,31 @@ $ ->
 		view.lightbox $('#frmXmppConfig'),
 			title: "XMPP Configuration"
 			afterShow: -> $('#txtXmppId').focus()
+
+	if typeof webkitNotifications is 'undefined' or not webkitNotifications
+		$('.toggleNotifications').parent().remove()
+
+	updateNotificationOption = ->
+		if config.notifications
+			$('.toggleNotifications').text 'disable notifications'
+		else
+			$('.toggleNotifications').text 'enable notifications'
+
+	$('.toggleNotifications').click ->
+		if not config.notifications
+			config.notifications = view.requestNotificationPermission ->
+				return if typeof webkitNotifications is 'undefined' or not webkitNotifications
+				if webkitNotifications.checkPermission() is 0
+					config.notifications = true
+					updateNotificationOption()
+		else
+			config.notifications = false
+
+		localStorage.setItem 'config-notifications', if config.notifications then '1' else ''
+		updateNotificationOption()
+
+	config.notifications = !!localStorage.getItem('config-notifications')
+	updateNotificationOption()
 
 	$(document).click 'a', (e) ->
 		e.target.target = '_blank'
@@ -240,79 +226,129 @@ $(xmpp).bind 'connecting error authenticating authfail connected connfail discon
 	track.event 'XMPP', event.type
 
 $(xmpp).bind 'error authfail connfail disconnected', (event) ->
-	view.postStatus "Connection Status: " + event.type
-	view.appendMessage $('<button>').text("Reconnect").click ->
-		view.clearConsole()
+	messageView.postStatus "Connection Status: " + event.type
+	view.status $('<button>').text("Reconnect").click ->
+		messageView.empty()
 		xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val()
 
 $(xmpp).bind 'connecting disconnecting', (event) ->
-	view.postStatus event.type + "..."
+	messageView.postStatus event.type + "..."
 
 $(xmpp).bind 'connected', (event) ->
-	view.clearConsole()
-	xmpp.join config.ROOM, config.nick
-	config.joinedRoom = config.ROOM
+	messageView.postStatus "Connected. Entering #{config.ROOM}"
+	joinRoom config.ROOM
 
 $(xmpp).bind 'subject', (event, data) ->
-	if data.room is config.joinedRoom
+	if data.room is config.currentRoom
 		view.topic data.subject
 
 $(xmpp).bind 'groupMessage', (event, data) ->
 	msg = $.trim(data.text)
 	return if not msg
-	config.history or = []
-	config.history.push data
-	if config.history.length > 10
-		config.history.shift()
 
-	view.postMessage msg, data.nick, data.delay
+	messageBin[data.room].add new Message
+		type: 'muc'
+		text: msg
+		from: data.nick
+		timestamp: data.delay
 
-	track.event 'message', 'groupchat', if data.nick is config.nick then 'out' else 'in'
-	if data.nick isnt config.nick and msg.toLowerCase().indexOf(config.nick.toLowerCase()) isnt -1
-		view.notification
-			title: data.nick
-			body: msg
+	nick = xmpp.rooms[data.room].nick
+	track.event 'message', 'groupchat', if data.nick is nick then 'out' else 'in'
+	if config.notifications and not data.self and not data.delay
+		if msg.toLowerCase().indexOf(nick.toLowerCase()) isnt -1
+			view.notification
+				title: "#{data.nick} (#{data.room})"
+				body: msg
+				force: data.room isnt config.currentRoom
+				callback: -> switchRoom data.room
 	true
 
 $(xmpp).bind 'privateMessage', (event, data) ->
 	msg = $.trim(data.text)
 	return if not msg
-	view.postPrivateMessage msg, data.nick, config.nick
-	view.notification
-		title: data.nick
-		body: msg
+	messageBin[data.room].add new Message
+		type: 'private'
+		text: msg
+		from: data.nick
+		to: data.to
+		timestamp: data.delay
+	if config.notifications
+		view.notification
+			title: "#{data.nick} (#{data.room})"
+			body: msg
+			force: data.room isnt config.currentRoom
+			callback: -> switchRoom data.room
 	track.event 'message', 'chat', 'in'
 
 $(xmpp).bind 'joined', (event, data) ->
-	if data.nick is config.nick
-		config.joinedRoom = data.room
-		view.topic()
+	if data.nick is xmpp.rooms[data.room].nick
+		switchRoom data.room
 	else
-		view.postStatus messages.joined.random().replace '{nick}', data.nick
+		messageBin[data.room].add new Message
+			type: 'status'
+			text: messages.joined.random().replace '{nick}', data.nick
 
 $(xmpp).bind 'parted', (event, data) ->
-	return if config.joinedRoom isnt data.room
-	if data.nick is config.nick
-		delete config.joinedRoom
+	if data.self
+		config.currentRoom = null
+		msg = "You have left #{data.room}."
+		msg += " (#{data.status})" if data.status
 	else
-		view.postStatus messages.parted.random().replace '{nick}', data.nick
+		msg = messages.parted.random().replace '{nick}', data.nick
+		msg += " (#{data.status})" if data.status
+
+	messageBin[data.room].add new Message
+		type: 'status'
+		text: msg
 
 $(xmpp).bind 'kicked', (event, data) ->
-	if data.nick is config.nick
-		delete config.joinedRoom
+	if data.self
+		config.currentRoom = null
 		msg = messages.meKicked.random()
 		msg += " (reason: #{data.reason})" if data.reason
-		view.postStatus msg
 	else
 		msg = messages.userKicked.random().replace '{nick}', data.nick
 		msg += " (reason: #{data.reason})" if data.reason
-		view.postStatus msg
+
+	messageBin[data.room].add new Message
+		type: 'status'
+		text: msg
+
+	if data.self and config.notifications
+		view.notification
+			title: "Kicked out of #{data.room}"
+			body: data.reason
+			force: true
+			callback: -> switchRoom data.room
+
+$(xmpp).bind 'banned', (event, data) ->
+	if data.self
+		config.currentRoom = null
+		msg = "You have been banned from this room."
+		msg += " (reason: #{data.reason})" if data.reason
+	else
+		msg = "#{nick} has been banned from this room."
+		msg += " (reason: #{data.reason})" if data.reason
+
+	messageBin[data.room].add new Message
+		type: 'status'
+		text: msg
+
+	if data.self and config.notifications
+		view.notification
+			title: "Banned from #{data.room}"
+			body: data.reason
+			force: true
+			callback: -> switchRoom data.room
 
 $(xmpp).bind 'nickChange', (event, data) ->
-	if data.nick is config.nick
-		config.nick = data.newNick
+	if data.self
 		localStorage.setItem('nick', data.newNick)
-		view.postStatus messages.meNickChanged.random().replace '{nick}', data.newNick
+		messageBin[data.room].add new Message
+			type: 'status'
+			text: messages.meNickChanged.random().replace '{nick}', data.newNick
 	else
-		view.postStatus messages.userNickChanged.random().replace('{nick}', data.nick).replace '{newNick}', data.newNick
+		messageBin[data.room].add new Message
+			type: 'status'
+			text: messages.userNickChanged.random().replace('{nick}', data.nick).replace '{newNick}', data.newNick
 

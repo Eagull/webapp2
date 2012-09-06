@@ -28,12 +28,14 @@ xmpp.part = (room, msg) ->
 	xmpp.conn.send p
 
 xmpp.eventMessageHandler = (msg) ->
+	room = Strophe.getBareJidFromJid(msg.getAttribute 'from')
+	return if not room of xmpp.rooms
+
 	bodyTags = msg.getElementsByTagName 'body'
 	if bodyTags.length == 0
 		subjectTags = msg.getElementsByTagName('subject')
 		if subjectTags.length == 0
 			return true
-		room = Strophe.getBareJidFromJid(msg.getAttribute 'from')
 		subject = $('<div>').html(Strophe.getText(subjectTags[0])).text()
 		if room of xmpp.rooms
 			xmpp.rooms[room].subject = subject
@@ -45,19 +47,24 @@ xmpp.eventMessageHandler = (msg) ->
 	delayTags = msg.getElementsByTagName('delay')
 	delay = if delayTags.length then delayTags[0].getAttribute('stamp') else false
 
+	nick = Strophe.getResourceFromJid(msg.getAttribute 'from')
 	type = msg.getAttribute 'type'
 	if type is 'chat'
 		$(xmpp).triggerHandler 'privateMessage',
-			to: msg.getAttribute 'to'
-			nick: Strophe.getResourceFromJid(msg.getAttribute 'from')
+			to: xmpp.rooms[room].nick
+			nick: nick
+			room: room
 			text: $('<div>').html(Strophe.getText(bodyTags[0])).text()
+			self: nick is xmpp.rooms[room].nick
 		return true
 
 	$(xmpp).triggerHandler 'groupMessage',
 		to: msg.getAttribute 'to'
-		nick: Strophe.getResourceFromJid(msg.getAttribute 'from')
+		nick: nick
+		room: room
 		text: $('<div>').html(Strophe.getText(bodyTags[0])).text()
 		delay: delay
+		self: nick is xmpp.rooms[room].nick
 
 	true
 
@@ -73,6 +80,7 @@ xmpp.mucPresenceHandler = (p) ->
 
 	if statusCodes.indexOf(110) >= 0 and p.getAttribute('type') isnt 'unavailable'
 		xmpp.rooms[room].joined = true
+		xmpp.rooms[room].nick = nick
 	else if not xmpp.rooms[room].joined
 		xmpp.rooms[room].roster.push nick
 		return true
@@ -80,9 +88,6 @@ xmpp.mucPresenceHandler = (p) ->
 	if p.getAttribute('type') is 'unavailable'
 		i = xmpp.rooms[room].roster.indexOf nick
 		xmpp.rooms[room].roster.splice(i, 1) if i isnt -1
-
-		if xmpp.rooms[room].nick is nick and statusCodes.indexOf(303) < 0
-			delete xmpp.rooms[room]
 
 		if statusCodes.indexOf(307) >= 0
 			reasonElems = p.getElementsByTagName('reason')
@@ -92,15 +97,31 @@ xmpp.mucPresenceHandler = (p) ->
 				room: room
 				nick: nick
 				reason: reason or ""
+				self: nick is xmpp.rooms[room].nick
+			delete xmpp.rooms[room] if xmpp.rooms[room].nick is nick
+
+		else if statusCodes.indexOf(301) >= 0
+			reasonElems = p.getElementsByTagName('reason')
+			if reasonElems.length > 0
+				reason = Strophe.getText(reasonElems[0])
+			$(xmpp).triggerHandler 'banned',
+				room: room
+				nick: nick
+				reason: reason or ""
+				self: nick is xmpp.rooms[room].nick
+			delete xmpp.rooms[room] if xmpp.rooms[room].nick is nick
 
 		else if statusCodes.indexOf(303) >= 0
 			itemElem = p.getElementsByTagName('item')[0]
 			newNick = itemElem.getAttribute('nick')
 			xmpp.rooms[room].roster.push newNick
+			if nick is xmpp.rooms[room].nick
+				xmpp.rooms[room].nick = newNick
 			$(xmpp).triggerHandler 'nickChange',
 				room: room
 				nick: nick
 				newNick: newNick
+				self: newNick is xmpp.rooms[room].nick
 
 		else
 			status = Strophe.getText(statusElems[0]) if statusElems.length > 0
@@ -108,12 +129,16 @@ xmpp.mucPresenceHandler = (p) ->
 				room: room
 				nick: nick
 				status: status or ""
+				self: nick is xmpp.rooms[room].nick
+			delete xmpp.rooms[room] if xmpp.rooms[room].nick is nick
+
 
 	else if xmpp.rooms[room].roster.indexOf(nick) is -1
 		xmpp.rooms[room].roster.push nick
 		$(xmpp).triggerHandler 'joined',
 			room: room
 			nick: nick
+			self
 
 	true
 
