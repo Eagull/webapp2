@@ -23,7 +23,9 @@ html(itemscope, itemtype="http://schema.org/Product")
 		<meta property="fb:app_id" content="216540884750"/>
 
 		link(rel='icon', type='image/x-icon', href="/favicon.ico")
-		link(href='http://fonts.googleapis.com/css?family=Architects+Daughter', rel='stylesheet', type='text/css')
+		link(href='http://fonts.googleapis.com/css?family=Architects+Daughter&text=EAGULL', rel='stylesheet', type='text/css')
+		link(href='http://fonts.googleapis.com/css?family=Ubuntu:300', rel='stylesheet', type='text/css')
+		link(href='http://fonts.googleapis.com/css?family=Happy+Monkey', rel='stylesheet', type='text/css')
 
 		link(href='/lib/bootstrap.css', rel='stylesheet', type='text/css')
 		!=css('global.css')
@@ -46,7 +48,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 		.navbar.navbar-inverse.navbar-fixed-top
 			.navbar-inner
 				.container-fluid
-					a.brand EAGULL
+					a.brand.hidden-phone EAGULL
 					ul.nav
 						li
 							a.btnRoom(x-jid='DEFAULT') FireMoth
@@ -54,12 +56,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 							a.btnRoom(x-jid='trollmoth@chat.eagull.net') TrollMoth
 						li
 							a.btnLightTemplate(x-template='frmJoinRoom') +
-					ul.nav.pull-right
-						li
-							a.ajax(x-doc="1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80") usage guide
-						li
-							a login
-					ul.visible-desktop.nav.pull-right
+					ul.hidden-phone.nav.pull-right
 						li.dropdown
 							a.dropdown-toggle(data-toggle="dropdown") options
 								b.caret
@@ -72,28 +69,24 @@ html(itemscope, itemtype="http://schema.org/Product")
 									a.partRoom leave this room
 								li
 									a.saveLogs save recent logs
-						li.dropdown
-							a.dropdown-toggle(data-toggle="dropdown") widgets
-								b.caret
-							ul.dropdown-menu
-								li
-									a.btnRoomContent(x-type='roster') users
-								li
-									a.btnRoomContent(x-type='video') video
+						li
+							a.btnRoomContent(x-type='roster') current users
+						li
+							a.ajax(x-doc="1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80") usage guide
 
-		#nav-spacer.hidden-phone
+		#nav-spacer.visible-desktop
 		#content.container-fluid
-			.row-fuild
+			.row-fluid.hidden-phone
 				.span12
 					pre#topicContainer(style="display:none")
 						h4#topic
-			.row-fuild
+			.row-fluid
 				.span12.scrollPanel#leftPanel
 					#messages
 				.span4.scrollPanel#rightPanel(style="display:none")
 					button.btn.btn-mini.btn-inverse#btnCollapseContent x
 					#contentPanel
-			input#messageBox(placeholder="Type a message here. Hit the enter key to send.")
+			input#messageBox(placeholder="Type a message here.")
 
 		#templates(style='display:none')
 			form#frmXmppConfig
@@ -132,13 +125,13 @@ html(itemscope, itemtype="http://schema.org/Product")
 				span.nick
 				| >
 				span.message
-				time.timestamp
+				time.timestamp.hidden-phone
 
 			#tplAction
 				| * 
 				span.nick
 				span.message
-				time.timestamp
+				time.timestamp.hidden-phone
 
 			#tplPrivateMessage
 				| [
@@ -147,7 +140,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 				span.nickTo
 				| ]
 				span.message
-				time.timestamp
+				time.timestamp.hidden-phone
 
 		script(src="/lib/jquery.timeago.js")
 		script(src="/lib/strophe.min.js")

@@ -48,6 +48,7 @@ window.blaze.messages =
 	joined: [
 		"{nick} has entered the building."
 		"{nick} has joined the dark side."
+		"{nick} appeared out of nowhere."
 		"Meet our newest loser, {nick}."
 		"{nick} made a grand entry. What are you looking at?"
 	]
@@ -55,12 +56,12 @@ window.blaze.messages =
 	parted: [
 		"{nick} has left the building."
 		"{nick} left, thank you guys."
-		"Another one bites the dust; in this case: {nick}"
-		"{nick} didn't like you, so they left. Maybe you should consider following?"
+		"Another one bites the dust; in this case, {nick}"
+		"{nick} didn't like you, so they left. You should consider following, maybe?"
 		"{nick} ran away."
-		"{nick} flew to moon."
+		"{nick} flew to the moon."
 		"{nick} was flushed down the toilet."
-		"{nick} was ran over by a truck."
+		"{nick} was run over by a truck."
 		"{nick} used teleport."
 		"{nick} vanished."
 	]
@@ -91,8 +92,9 @@ window.blaze.messages =
 
 	meNickChanged: [
 		"You are now known as {nick}."
+		"You, sir, are going to be called {nick} from now on."
 		"{nick} is now your name, regardless of what anyone thinks."
-		"Your name is now {nick}. Don't change it again."
+		"Your name is {nick}. Don't change it again."
 		"{nick} is a horrible nickname, but if that's what you want to be... sure!"
 		"You shall be called {nick} from now on."
 	]
