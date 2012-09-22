@@ -56,6 +56,7 @@ xmpp.messageHandler = (msg) ->
 		$(xmpp).triggerHandler 'subject',
 			room: room
 			subject: subject
+			nick: Strophe.getResourceFromJid msg.getAttribute 'from'
 		return true
 
 	delayTags = msg.getElementsByTagName('delay')

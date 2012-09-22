@@ -239,6 +239,9 @@ $(xmpp).bind 'connected', (event) ->
 	joinRoom config.ROOM
 
 $(xmpp).bind 'subject', (event, data) ->
+	messageBin[data.room].add new Message
+		type: 'status'
+		text: "Topic: #{data.subject} (set by #{data.nick})"
 	if data.room is config.currentRoom
 		view.topic data.subject
 
