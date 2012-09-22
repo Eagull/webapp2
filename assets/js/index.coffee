@@ -1,13 +1,12 @@
 view = blaze.view
 util = blaze.util
-config = blaze.config or {}
+config = blaze.config ?= {}
 messages = blaze.messages
 
 delayed = (delay, func) ->
 	setTimeout func, delay
 
 config.ROOM = if blaze.debug then 'test@chat.eagull.net' else 'firemoth@chat.eagull.net'
-NICK_LIST = ["Abra", "Charmander", "Jigglypuff", "Metapod", "Pikachu", "Psyduck", "Squirtle"]
 
 messageView = {}
 messageBin = {}
@@ -24,7 +23,7 @@ joinRoom = (room, nick) ->
 		messageBin[room] = new blaze.collections.Messages()
 	if room not of xmpp.rooms
 		messageBin[room].reset()
-		xmpp.join room, nick or localStorage.getItem('nick') or NICK_LIST.random()
+		xmpp.join room, nick
 		$.fancybox.showLoading()
 	else
 		switchRoom room
@@ -86,9 +85,10 @@ commands =
 			messageView.postStatus "Syntax: /nick {desired nickname}"
 			return true
 		if not config.currentRoom
+			$('#txtNickname').val(newNick).change()
 			messageView.postStatus messages.actionImpossible.random()
 			return true
-		if not /^[a-zA-Z](\w)*$/.test(newNick)
+		if not /^[a-z][a-z0-9]*$/i.test(newNick)
 			messageView.postStatus messages.invalidInput.random()
 			return false
 		if newNick.length > 20
@@ -96,6 +96,7 @@ commands =
 			return false
 		else
 			xmpp.conn.muc.changeNick config.currentRoom, newNick
+			$('#txtNickname').val(newNick).change()
 		true
 
 	users: ->
@@ -106,7 +107,10 @@ commands =
 		true
 
 $ ->
+	homeView = new blaze.views.HomeView()
 	messageView = new blaze.views.MessageView()
+
+	messageView.$el.append(homeView.el)
 
 	$("input.persistent, textarea.persistent").each (index, element) ->
 		value = localStorage.getItem 'field-' + (element.name || element.id)
@@ -118,6 +122,10 @@ $ ->
 			localStorage.setItem 'field-' + (element.name || element.id), ""
 		else
 			localStorage.setItem 'field-' + (element.name || element.id), element.value
+
+	$('a.brand').click ->
+		$('#topicContainer').fadeOut()
+		messageView.$el.empty().append(homeView.el)
 
 	$('#messageBox').keydown (e) ->
 		if e.which is 9
@@ -145,12 +153,43 @@ $ ->
 
 	$('.btnRoom[x-jid="DEFAULT"]').attr 'x-jid', config.ROOM
 
-	$('.btnRoom').click (e) ->
-		e.preventDefault()
+	$(document).on 'click', 'a.btnRoom', (e) ->
 		room = e.target.getAttribute 'x-jid'
-		joinRoom room
+		e.preventDefault()
+		$txtNick = $('#txtNickname')
+		if $txtNick.val()
+			nick = $txtNick.val().trim()
+			if nick and /^[a-z0-9]+$/i.test(nick)
+				joinRoom room, nick
+				return
+
+		view.lightbox $('#frmNickname'),
+			afterShow: ->
+				$('.btnSaveNickname').unbind()
+				$('.btnSaveNickname').click ->
+					nick = $txtNick.val().trim()
+					if nick and /^[a-z0-9]+$/i.test(nick)
+						joinRoom room, nick
+						$.fancybox.close()
+					else
+						$txtNick.val('').focus()
+				$txtNick.focus()
 
 	$('.dropdown-menu a').click -> $('.dropdown.open .dropdown-toggle').dropdown('toggle');
+
+	$('a.changeNickname').click ->
+		view.lightbox $('#frmNickname'),
+			afterShow: ->
+				$txtNick = $('#txtNickname')
+				$('.btnSaveNickname').unbind()
+				$('.btnSaveNickname').click ->
+					nick = $txtNick.val().trim()
+					if nick and /^[a-z0-9]+$/i.test(nick)
+						xmpp.conn.muc.changeNick(config.currentRoom, nick) if config.currentRoom
+						$.fancybox.close()
+					else
+						$txtNick.val('').focus()
+				$txtNick.focus()
 
 	$('.btnRoomContent').click (e) ->
 		e.preventDefault()
@@ -196,8 +235,11 @@ $ ->
 	config.notifications = !!localStorage.getItem('config-notifications')
 	updateNotificationOption()
 
-	$(document).click 'a', (e) ->
-		e.target.target = '_blank'
+	$(document).on 'click', 'a', (e) ->
+		if e.target.host is document.location.host
+			e.preventDefault()
+		else
+			e.target.target = '_blank'
 
 	$('form').submit (e) ->
 		e.preventDefault()
@@ -218,25 +260,25 @@ $ ->
 
 	xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val()
 
-#	if not $('#txtNickname').val() then view.lightbox $('#frmNickname')
-
 	$('#messageBox').focus()
 
 $(xmpp).bind 'connecting error authenticating authfail connected connfail disconnecting disconnected', (event) ->
 	track.event 'XMPP', event.type
+	console.log "XMPP:", event.type
 
 $(xmpp).bind 'error authfail connfail disconnected', (event) ->
-	messageView.postStatus "Connection Status: " + event.type
+	switch event.type
+		when 'error'
+			messageView.postStatus "A connection error has occured. Please try again."
+		when 'authfail'
+			messageView.postStatus "Authentication has failed. Please check your username and password."
+		when 'connfail'
+			messageView.postStatus "Connection has failed. Please try again."
+		when 'disconnected'
+			messageView.postStatus "Disconnected from the server."
 	view.status $('<button>').text("Reconnect").click ->
 		messageView.empty()
 		xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val()
-
-$(xmpp).bind 'connecting disconnecting', (event) ->
-	messageView.postStatus event.type + "..."
-
-$(xmpp).bind 'connected', (event) ->
-	messageView.postStatus "Connected. Entering #{config.ROOM}"
-	joinRoom config.ROOM
 
 $(xmpp).bind 'subject', (event, data) ->
 	messageBin[data.room].add new Message

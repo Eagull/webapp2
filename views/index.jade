@@ -42,6 +42,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 		!=js("track.js")
 		!=js("messages.js")
 		!=js("mvc.js")
+		!=js("home.js")
 		!=js("index.js")
 
 	body
@@ -64,11 +65,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 								li
 									a.toggleNotifications enable notifications
 								li
-									a.createRoom create new room
-								li
-									a.partRoom leave this room
-								li
-									a.saveLogs save recent logs
+									a.changeNickname change nickname
 						li
 							a.btnRoomContent(x-type='roster') current users
 						li
@@ -97,10 +94,10 @@ html(itemscope, itemtype="http://schema.org/Product")
 				button.btnCloseLightbox#btnSaveXmppConfig.nice.small.green.button.right Connect
 
 			form#frmNickname
-				h3 Enter a nickname
 				label Nickname
-					input.input-text.persistent#txtNickname
-				button.btnSaveNickname
+				input.input-xlarge.persistent#txtNickname(type='text', required='required', maxlength=20, pattern="^ *[A-Za-z0-9]+ *$", placeholder="English letter and numbers only!")
+				.btnGroup
+					button.btn.btn-primary.btnSaveNickname Save
 
 			form#frmJoinRoom
 				h2 Join a chatroom

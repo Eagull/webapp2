@@ -1,6 +1,6 @@
-blaze.models = {}
-blaze.collections = {}
-blaze.views = {}
+blaze.models ?= {}
+blaze.collections ?= {}
+blaze.views ?= {}
 
 blaze.models.Message = Backbone.Model.extend
 	defaults:
@@ -24,7 +24,6 @@ blaze.views.MessageView = Backbone.View.extend
 		@tpl.action = $('#tplAction').html();
 		@$leftPanel = @$el.parent()
 		@nickColorMap = {}
-		@render() if @collection
 		this
 
 	setCollection: (collection) ->
