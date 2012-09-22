@@ -36,6 +36,7 @@ switchRoom = (room) ->
 	config.currentRoom = room
 	messageView.setCollection(messageBin[room])
 	view.topic()
+	$('#messageTypingBar').fadeIn()
 
 sendMessage = (msg) ->
 	msg = $.trim msg
@@ -112,6 +113,8 @@ $ ->
 
 	messageView.$el.append(homeView.el)
 
+	if $.browser.mozilla then document.body.style.fontSize = "14px"
+
 	$("input.persistent, textarea.persistent").each (index, element) ->
 		value = localStorage.getItem 'field-' + (element.name || element.id)
 		element.value = value if value
@@ -125,6 +128,7 @@ $ ->
 
 	$('a.brand').click ->
 		$('#topicContainer').fadeOut()
+		$('#messageTypingBar').fadeOut()
 		messageView.$el.empty().append(homeView.el)
 
 	$('#messageBox').keydown (e) ->
@@ -133,8 +137,14 @@ $ ->
 			messageView.postStatus messages.resultUnavailable.random()
 		if e.which is 13
 			e.preventDefault()
-			sendMessage e.target.value, "Me"
+			sendMessage e.target.value
 			e.target.value = ""
+
+	$('#btnSend').click ->
+		$msgBox = $('#messageBox')
+		sendMessage $msgBox.val()
+		$msgBox.val ''
+		$msgBox.focus()
 
 	$('a.ajax').click (e) ->
 		e.preventDefault()

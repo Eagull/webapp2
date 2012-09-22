@@ -30,7 +30,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 		link(href='/lib/bootstrap.css', rel='stylesheet', type='text/css')
 		!=css('global.css')
 
-		script window.blaze = { version: "#{version}", debug: (location.hostname.indexOf('eagull.net') == -1) };
+		script window.blaze = { version: "#{version}", debug: (location.hostname.indexOf('eagull.net') == -1) }; if(blaze.debug) blaze.version += "-dev";
 		script _gaq = window._gaq || []; _gaq.push(['_setAccount', blaze.debug ? 'UA-21159963-7' : 'UA-21159963-8'], ['_trackPageview']);
 		script(src="/lib/jquery.min.js")
 		script(src="/lib/jquery-ui.min.js")
@@ -83,7 +83,10 @@ html(itemscope, itemtype="http://schema.org/Product")
 				.span4.scrollPanel#rightPanel(style="display:none")
 					button.btn.btn-mini.btn-inverse#btnCollapseContent x
 					#contentPanel
+
+		#messageTypingBar(style='display:none')
 			input#messageBox(placeholder="Type a message here.")
+			button#btnSend.btn.btn-large.btn-primary Send
 
 		#templates(style='display:none')
 			form#frmXmppConfig
