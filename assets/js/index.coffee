@@ -54,6 +54,9 @@ sendMessage = (msg) ->
 
 	if msg[0] is '@'
 		nick = msg.substr(1).split(' ', 1)[0]
+		if msg.indexOf(' ') is -1
+			messageView.postStatus blaze.messages.invalidInput.random()
+			return
 		message = msg.substr(msg.indexOf(' ')).trim()
 		if config.currentRoom
 			if xmpp.rooms[config.currentRoom].roster.indexOf(nick) isnt -1
@@ -70,6 +73,31 @@ sendMessage = (msg) ->
 		xmpp.conn.muc.groupchat config.currentRoom, msg
 	else
 		messageView.postStatus blaze.messages.actionImpossible.random()
+
+tabComplete = (word) ->
+	if not config.currentRoom of xmpp.rooms then return
+	roster = xmpp.rooms[config.currentRoom].roster
+	if not $.isArray roster then return
+	word = word.toLowerCase()
+
+	if word.indexOf('@') is 0
+		word = word.substr(1)
+
+	if word.indexOf('/') is 0
+		matches = []
+		word = word.substr(1)
+		$.each commands, (command) ->
+			if command.indexOf(word) is 0 then matches.push command
+	else
+		matches = roster.filter (nick, i) -> nick.toLowerCase().indexOf(word) is 0
+
+	if matches.length is 1
+		return matches[0].substr(word.length)
+	else if matches.length > 1
+		messageView.postStatus "Possible matches: " + matches.join(', ')
+	else
+		messageView.postStatus messages.actionImpossible.random()
+	return false
 
 commands =
 	help: ->
@@ -137,7 +165,15 @@ $ ->
 	$('#messageBox').keydown (e) ->
 		if e.which is 9
 			e.preventDefault()
-			messageView.postStatus messages.resultUnavailable.random()
+			text = e.target.value
+			lastWord = text.substr(text.lastIndexOf(' ') + 1)
+			result = tabComplete(lastWord, text)
+			e.target.value += result if result
+			if result isnt false
+				if text.indexOf(' ') is -1 and text.indexOf('/') isnt 0 and text.indexOf('@') isnt 0
+					e.target.value += ': '
+				else
+					e.target.value += ' '
 		if e.which is 13
 			e.preventDefault()
 			sendMessage e.target.value
