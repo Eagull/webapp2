@@ -90,17 +90,24 @@ xmpp.mucPresenceHandler = (p) ->
 
 	return true if room not of xmpp.rooms
 
+	type = p.getAttribute('type')
 	statusElems = p.getElementsByTagName('status')
 	statusCodes = (parseInt(s.getAttribute('code')) for s in statusElems)
+	
+	selfPresence = statusCodes.indexOf(110) >= 0
 
-	if statusCodes.indexOf(110) >= 0 and p.getAttribute('type') isnt 'unavailable'
+	if selfPresence and type isnt 'unavailable'
 		xmpp.rooms[room].joined = true
 		xmpp.rooms[room].nick = nick
 	else if not xmpp.rooms[room].joined
 		xmpp.rooms[room].roster.push nick
+		console.log "InitJoined: #{nick}, Roster:", xmpp.rooms[room].roster.toString()
 		return true
 
-	if p.getAttribute('type') is 'unavailable'
+	if type is 'error'
+		console.error p
+
+	if type is 'unavailable'
 		i = xmpp.rooms[room].roster.indexOf nick
 		xmpp.rooms[room].roster.splice(i, 1) if i isnt -1
 
@@ -112,7 +119,7 @@ xmpp.mucPresenceHandler = (p) ->
 				room: room
 				nick: nick
 				reason: reason or ""
-				self: nick is xmpp.rooms[room].nick
+				self: selfPresence
 			delete xmpp.rooms[room] if xmpp.rooms[room].nick is nick
 
 		else if statusCodes.indexOf(301) >= 0
@@ -123,20 +130,17 @@ xmpp.mucPresenceHandler = (p) ->
 				room: room
 				nick: nick
 				reason: reason or ""
-				self: nick is xmpp.rooms[room].nick
+				self: selfPresence
 			delete xmpp.rooms[room] if xmpp.rooms[room].nick is nick
 
 		else if statusCodes.indexOf(303) >= 0
 			itemElem = p.getElementsByTagName('item')[0]
 			newNick = itemElem.getAttribute('nick')
-			xmpp.rooms[room].roster.push newNick
-			if nick is xmpp.rooms[room].nick
-				xmpp.rooms[room].nick = newNick
 			$(xmpp).triggerHandler 'nickChange',
 				room: room
 				nick: nick
 				newNick: newNick
-				self: newNick is xmpp.rooms[room].nick
+				self: selfPresence
 
 		else
 			status = Strophe.getText(statusElems[0]) if statusElems.length > 0
@@ -144,7 +148,7 @@ xmpp.mucPresenceHandler = (p) ->
 				room: room
 				nick: nick
 				status: status or ""
-				self: nick is xmpp.rooms[room].nick
+				self: selfPresence
 			delete xmpp.rooms[room] if xmpp.rooms[room].nick is nick
 
 
@@ -153,7 +157,7 @@ xmpp.mucPresenceHandler = (p) ->
 		$(xmpp).triggerHandler 'joined',
 			room: room
 			nick: nick
-			self
+			self: selfPresence
 
 	true
 
