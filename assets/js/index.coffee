@@ -10,6 +10,7 @@ config.ROOM = if blaze.debug then 'test@chat.eagull.net' else 'firemoth@chat.eag
 
 messageView = {}
 messageBin = {}
+rosterViews = {}
 Message = blaze.models.Message
 
 view.topic = (topic) ->
@@ -30,6 +31,8 @@ joinRoom = (room, nick) ->
 
 switchRoom = (room) ->
 	return if room not of xmpp.rooms
+	roster = rosterViews[room] ?= new blaze.views.RosterView(room)
+	$('#roster').empty().append(roster.el)
 	$.fancybox.hideLoading()
 	$('li.active').removeClass 'active'
 	$(".btnRoom[x-jid='#{room}']").parent().addClass 'active'
@@ -207,8 +210,13 @@ $ ->
 		delayed 510, ->
 			$('#rightPanel').fadeIn()
 		type = e.target.getAttribute('x-type')
-		template = $('#content-' + type).html()
-		$('#contentPanel').empty().append(template) if template
+		switch type
+			when 'roster'
+				if config.currentRoom of rosterViews
+					$('#contentPanel #roster').empty().append(rosterViews[config.currentRoom].el)
+				else
+					$('#contentPanel #roster').text('Join a room!')
+		true
 
 	$('#btnCollapseContent').click ->
 		$('#rightPanel').fadeOut(500)

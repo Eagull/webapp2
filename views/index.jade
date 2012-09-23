@@ -43,6 +43,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 		!=js("messages.js")
 		!=js("mvc.js")
 		!=js("home.js")
+		!=js("roster.js")
 		!=js("index.js")
 
 	body
@@ -83,6 +84,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 				.span4.scrollPanel#rightPanel(style="display:none")
 					button.btn.btn-mini.btn-inverse#btnCollapseContent x
 					#contentPanel
+						#roster
 
 		#messageTypingBar(style='display:none')
 			input#messageBox(placeholder="Type a message here.")
@@ -111,14 +113,6 @@ html(itemscope, itemtype="http://schema.org/Product")
 			form#frmCreateRoom
 				label Name
 					input.input-text
-
-			#content-roster
-				#roster
-					.rosterItem firefly
-					.rosterItem Bubbalicious
-					.rosterItem dragon
-			#content-video
-				div http://www.youtube.com/nevergonnagiveyouup
 
 			#tplMessage
 				| <
