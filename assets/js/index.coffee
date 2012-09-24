@@ -19,6 +19,28 @@ view.topic = (topic) ->
 	$('#topic').text topic or config.currentRoom
 	$('#topicContainer').slideDown(-> $(window).resize())
 
+checkNickAndJoinRoom = (room) ->
+	$txtNick = $('#txtNickname')
+	if $txtNick.val()
+		nick = $txtNick.val().trim()
+		if nick and /^[a-z0-9]+$/i.test(nick)
+			console.log "Joining", room
+			joinRoom room, nick
+			return
+
+	view.lightbox $('#frmNickname'),
+		afterShow: ->
+			$('.btnSaveNickname').unbind()
+			$('.btnSaveNickname').click ->
+				nick = $txtNick.val().trim()
+				if nick and /^[a-z0-9]+$/i.test(nick)
+					console.log "Joining", room
+					joinRoom room, nick
+					$.fancybox.close()
+				else
+					$txtNick.val('').focus()
+			$txtNick.focus()
+
 joinRoom = (room, nick) ->
 	if room not of messageBin
 		messageBin[room] = new blaze.collections.Messages()
@@ -40,6 +62,7 @@ switchRoom = (room) ->
 	messageView.setCollection(messageBin[room])
 	view.topic()
 	$('#messageTypingBar').fadeIn()
+	$('#messageBox').focus()
 
 sendMessage = (msg) ->
 	msg = $.trim msg
@@ -138,11 +161,33 @@ commands =
 			messageView.postStatus "Users: " + xmpp.rooms[config.currentRoom].roster.join(', ')
 		true
 
-$ ->
-	homeView = new blaze.views.HomeView()
-	messageView = new blaze.views.MessageView()
+AppRouter = Backbone.Router.extend
+	routes:
+		'': 'home'
+		'room/:jid': 'room'
+		'usage': 'usage'
+		'*path':  'home'
 
-	messageView.$el.append(homeView.el)
+	home: ->
+		$('#topicContainer').hide()
+		$('#messageTypingBar').hide()
+		homeView = new blaze.views.HomeView("1QxC1VCMlZbQrFYy8Ijr1XvyyYxpj8m9x4zuQgVu1G3w")
+		messageView.$el.empty().append(homeView.el)
+		btn = $('<a>').addClass("btn btn-large btn-success btnRoom").text('Join the conversation!')
+		messageView.$el.append btn.attr('href', '/room/' + config.ROOM)
+
+	usage: ->
+		$('#topicContainer').hide()
+		$('#messageTypingBar').hide()
+		usageView = new blaze.views.HomeView("1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80")
+		messageView.$el.empty().append(usageView.el)
+
+	room: (jid) ->
+		checkNickAndJoinRoom(jid)
+		return true
+
+$ ->
+	messageView = new blaze.views.MessageView()
 
 	if $.browser.mozilla then document.body.style.fontSize = "14px"
 
@@ -156,11 +201,6 @@ $ ->
 			localStorage.setItem 'field-' + (element.name || element.id), ""
 		else
 			localStorage.setItem 'field-' + (element.name || element.id), element.value
-
-	$('a.brand').click ->
-		$('#topicContainer').fadeOut()
-		$('#messageTypingBar').fadeOut()
-		messageView.$el.empty().append(homeView.el)
 
 	$('#messageBox').keydown (e) ->
 		if e.which is 9
@@ -184,45 +224,6 @@ $ ->
 		sendMessage $msgBox.val()
 		$msgBox.val ''
 		$msgBox.focus()
-
-	$('a.ajax').click (e) ->
-		e.preventDefault()
-		a = e.target
-		doc = a.getAttribute('x-doc')
-		url = if doc then "http://content.dragonsblaze.com/json/#{doc}" else a.href
-		$.fancybox.showLoading()
-		$.ajax
-			url: url
-			success: (data) -> view.lightbox data.content
-			error: (err) ->
-				console.error err
-				view.lightbox err
-			dataType: 'jsonp'
-			jsonpCallback: -> "cb" + Date.now()
-
-	$('.btnRoom[x-jid="DEFAULT"]').attr 'x-jid', config.ROOM
-
-	$(document).on 'click', 'a.btnRoom', (e) ->
-		room = e.target.getAttribute 'x-jid'
-		e.preventDefault()
-		$txtNick = $('#txtNickname')
-		if $txtNick.val()
-			nick = $txtNick.val().trim()
-			if nick and /^[a-z0-9]+$/i.test(nick)
-				joinRoom room, nick
-				return
-
-		view.lightbox $('#frmNickname'),
-			afterShow: ->
-				$('.btnSaveNickname').unbind()
-				$('.btnSaveNickname').click ->
-					nick = $txtNick.val().trim()
-					if nick and /^[a-z0-9]+$/i.test(nick)
-						joinRoom room, nick
-						$.fancybox.close()
-					else
-						$txtNick.val('').focus()
-				$txtNick.focus()
 
 	$('.dropdown-menu a').click -> $('.dropdown.open .dropdown-toggle').dropdown('toggle');
 
@@ -291,6 +292,8 @@ $ ->
 
 	$(document).on 'click', 'a', (e) ->
 		if e.target.host is document.location.host
+			appRouter.navigate e.target.pathname,
+				trigger: true
 			e.preventDefault()
 		else
 			e.target.target = '_blank'
@@ -314,7 +317,9 @@ $ ->
 
 	xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val()
 
-	$('#messageBox').focus()
+	appRouter = new AppRouter();
+	Backbone.history.start
+		pushState: true
 
 $(xmpp).bind 'connecting error authenticating authfail connected connfail disconnecting disconnected', (event) ->
 	track.event 'XMPP', event.type

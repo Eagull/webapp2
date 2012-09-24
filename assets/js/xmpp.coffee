@@ -6,6 +6,7 @@ DEFAULT_USER = 'anon.eagull.net'
 RESOURCE = "webapp-#{blaze.version}-#{parseInt(Date.now()/1000)}"
 
 xmpp.rooms = {}
+joinQueue = []
 
 xmpp.send = (to, msg, attr) ->
 	attr = attr or {}
@@ -14,10 +15,23 @@ xmpp.send = (to, msg, attr) ->
 	xmpp.conn.send($msg(attr).c('body', null, msg))
 
 xmpp.join = (room, nick) ->
+	if not xmpp.conn.connected
+		joinQueue.push
+			room: room
+			nick: nick
+		return
 	xmpp.conn.send $pres({from: xmpp.conn.jid, to: room + '/' + nick}).c('x', {xmlns: Strophe.NS.MUC })
 	xmpp.rooms[room] =
 		nick: nick
 		roster: []
+
+$(xmpp).bind 'connected', ->
+	if not xmpp.conn.connected
+		return console.error "XMPP 'connected' triggered while `xmpp.conn.connected` is false"
+	joinQueueCopy = $.merge [], joinQueue
+	joinQueue = []
+	for roomObj in joinQueueCopy
+		xmpp.join roomObj.room, roomObj.nick
 
 xmpp.part = (room, msg) ->
 	p = $pres

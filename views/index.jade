@@ -50,12 +50,12 @@ html(itemscope, itemtype="http://schema.org/Product")
 		.navbar.navbar-inverse.navbar-fixed-top
 			.navbar-inner
 				.container-fluid
-					a.brand.hidden-phone EAGULL
+					a.brand.hidden-phone(href='/') EAGULL
 					ul.nav
 						li
-							a.btnRoom(x-jid='DEFAULT') FireMoth
+							a(href='/room/firemoth@chat.eagull.net') FireMoth
 						li
-							a.btnRoom(x-jid='trollmoth@chat.eagull.net') TrollMoth
+							a(href='/room/chaosmoth@chat.eagull.net') ChaosMoth
 						li
 							a.btnLightTemplate(x-template='frmJoinRoom') +
 					ul.hidden-phone.nav.pull-right
@@ -70,7 +70,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 						li
 							a.btnRoomContent(x-type='roster') current users
 						li
-							a.ajax(x-doc="1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80") usage guide
+							a(href='/usage') usage guide
 
 		#nav-spacer.visible-desktop
 		#content.container-fluid

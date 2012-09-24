@@ -26,7 +26,7 @@ app.configure ->
 	app.use require('connect-assets')()
 	app.use express.static(__dirname + '/public')
 
-app.get '/', (req, res) ->
+app.get '/*', (req, res) ->
 	res.render 'index.jade', version: pkg.version
 
 io.on 'connection', (socket) ->

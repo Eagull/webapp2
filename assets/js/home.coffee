@@ -1,20 +1,18 @@
 blaze.views ?= {}
 config = blaze.config ?= {}
 
-INTRO_DOC = "1QxC1VCMlZbQrFYy8Ijr1XvyyYxpj8m9x4zuQgVu1G3w"
-
 blaze.views.HomeView = Backbone.View.extend
 
-	initialize: ->
+	initialize: (docId) ->
 		console.log "initializing home view" if blaze.debug
-		@render()
+		@render(docId)
 
-	render: () ->
+	render: (docId) ->
 		myEl = @$el
 		console.log "rendering home view" if blaze.debug
 		$.fancybox.showLoading()
 		request = $.ajax
-			url: "http://content.dragonsblaze.com/json/" + INTRO_DOC
+			url: "http://content.dragonsblaze.com/json/" + docId
 			dataType: 'jsonp'
 			jsonpCallback: -> "cb" + Date.now()
 
@@ -28,9 +26,6 @@ blaze.views.HomeView = Backbone.View.extend
 
 		request.always ->
 			$.fancybox.hideLoading()
-			btn = $('<a>').addClass("btn btn-large btn-success btnRoom").text('Join the conversation!')
-			myEl.append btn.attr('x-jid', config.ROOM).attr('href', '/room/' + config.ROOM)
-			console.log "home: added button" if blaze.debug
 
 		this
 
