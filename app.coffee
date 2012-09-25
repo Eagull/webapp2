@@ -2,7 +2,12 @@ process.env.NODE_ENV ?= 'dev'
 
 util = require 'util'
 express = require 'express'
-pkg = require './package.json'
+
+version = "unknown"
+exec = require('child_process').exec
+exec 'git rev-parse --short HEAD', (err, stdout, stderr) ->
+	version = stdout.replace '\n', ''
+	util.log "Version: #{version}"
 
 app = express.createServer()
 io = require('socket.io').listen(app)
@@ -27,7 +32,7 @@ app.configure ->
 	app.use express.static(__dirname + '/public')
 
 app.get '/*', (req, res) ->
-	res.render 'index.jade', version: pkg.version
+	res.render 'index.jade', version: version
 
 io.on 'connection', (socket) ->
 	socket.on 'broadcastMessage', (message) ->
@@ -35,6 +40,5 @@ io.on 'connection', (socket) ->
 		io.sockets.emit 'messageReceived', message
 
 app.listen process.env.PORT || 1337, ->
-	util.log "Loaded v#{pkg.version}"
 	util.log util.format "[%s] http://%s:%d/", process.env.NODE_ENV, app.address().address, app.address().port
 
