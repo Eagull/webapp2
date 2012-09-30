@@ -1,4 +1,4 @@
-window.blaze.messages =
+module.exports =
 	invalidInput: [
 		"Try again. This time, fail less."
 		"Commas are important; they're the difference between 'Let's eat, Grandma' and 'Let's eat Grandma'."

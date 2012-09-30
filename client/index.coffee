@@ -1,19 +1,25 @@
-view = blaze.view
-util = blaze.util
-config = blaze.config ?= {}
-messages = blaze.messages
+util = require './util'
+messages = require './messages'
+xmpp = require './xmpp'
+track = require './track'
+MessageBackbone = require './messageBackbone'
+ContentView = require './contentView'
+RosterView = require './rosterView'
 
-delayed = (delay, func) ->
-	setTimeout func, delay
+Message = MessageBackbone.Model
 
-config.ROOM = if blaze.debug then 'test@chat.eagull.net' else 'firemoth@chat.eagull.net'
+debug = window.global.debug
 
+config = {}
 messageView = {}
 messageBin = {}
 rosterViews = {}
-Message = blaze.models.Message
 
-view.topic = (topic) ->
+config.ROOM = if debug then 'test@chat.eagull.net' else 'firemoth@chat.eagull.net'
+config.RESOURCE = "webapp-#{window.global.version}-#{parseInt(Date.now()/1000)}"
+if debug then config.RESOURCE += "-dev"
+
+setTopic = (topic) ->
 	if not topic and config.currentRoom of xmpp.rooms
 		topic = xmpp.rooms[config.currentRoom].subject
 	$('#topic').text topic or config.currentRoom
@@ -29,7 +35,7 @@ checkNickAndJoinRoom = (room) ->
 			return
 
 	config.frmNickname ?= $('#frmNickname')
-	view.lightbox config.frmNickname,
+	util.lightbox config.frmNickname,
 		afterShow: ->
 			$('.btnSaveNickname').unbind()
 			$('.btnSaveNickname').click ->
@@ -44,7 +50,7 @@ checkNickAndJoinRoom = (room) ->
 
 joinRoom = (room, nick) ->
 	if room not of messageBin
-		messageBin[room] = new blaze.collections.Messages()
+		messageBin[room] = new MessageBackbone.Collection()
 	if room not of xmpp.rooms
 		messageBin[room].reset()
 		xmpp.join room, nick
@@ -54,14 +60,14 @@ joinRoom = (room, nick) ->
 
 switchRoom = (room) ->
 	return if room not of xmpp.rooms
-	roster = rosterViews[room] ?= new blaze.views.RosterView(room)
+	roster = rosterViews[room] ?= new RosterView(room)
 	$('#roster').empty().append(roster.el)
 	$.fancybox.hideLoading()
 	$('li.active').removeClass 'active'
 	$(".btnRoom[x-jid='#{room}']").parent().addClass 'active'
 	config.currentRoom = room
 	messageView.setCollection(messageBin[room])
-	view.topic()
+	setTopic()
 	$('#messageTypingBar').fadeIn()
 	$('#messageBox').focus()
 
@@ -79,7 +85,7 @@ sendMessage = (msg) ->
 	if msg[0] is '@'
 		nick = msg.substr(1).split(' ', 1)[0]
 		if msg.indexOf(' ') is -1
-			messageView.postStatus blaze.messages.invalidInput.random()
+			messageView.postStatus messages.invalidInput.random()
 			return
 		message = msg.substr(msg.indexOf(' ')).trim()
 		if config.currentRoom
@@ -96,7 +102,7 @@ sendMessage = (msg) ->
 	if config.currentRoom and config.currentRoom of xmpp.rooms
 		xmpp.conn.muc.groupchat config.currentRoom, msg
 	else
-		messageView.postStatus blaze.messages.actionImpossible.random()
+		messageView.postStatus messages.actionImpossible.random()
 
 tabComplete = (word) ->
 	if not config.currentRoom of xmpp.rooms then return
@@ -172,7 +178,7 @@ AppRouter = Backbone.Router.extend
 	home: ->
 		config.currentRoom = null
 		$('.messageView').fadeOut(-> $('.contentView').fadeIn())
-		homeView = new blaze.views.HomeView "1QxC1VCMlZbQrFYy8Ijr1XvyyYxpj8m9x4zuQgVu1G3w", ->
+		homeView = new ContentView "1QxC1VCMlZbQrFYy8Ijr1XvyyYxpj8m9x4zuQgVu1G3w", ->
 			btn = $('<a>').addClass("btn btn-large btn-success btnRoom").text('Join the conversation!')
 			homeView.$el.append btn.attr('href', '/room/' + config.ROOM)
 			img = $('#homeImage').hide()
@@ -185,7 +191,7 @@ AppRouter = Backbone.Router.extend
 	usage: ->
 		config.currentRoom = null
 		$('.messageView').fadeOut(-> $('.contentView').fadeIn())
-		usageView = new blaze.views.HomeView("1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80")
+		usageView = new ContentView("1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80")
 
 	room: (jid) ->
 		$('.contentView').fadeOut -> $('.messageView').fadeIn -> $(window).resize()
@@ -193,7 +199,7 @@ AppRouter = Backbone.Router.extend
 		return true
 
 $ ->
-	messageView = new blaze.views.MessageView()
+	messageView = new MessageBackbone.View()
 
 	$('.messageView').hide()
 
@@ -237,7 +243,7 @@ $ ->
 
 	$('a.changeNickname').click ->
 		config.frmNickname ?= $('#frmNickname')
-		view.lightbox config.frmNickname,
+		util.lightbox config.frmNickname,
 			afterShow: ->
 				$txtNick = $('#txtNickname')
 				$('.btnSaveNickname').unbind()
@@ -270,7 +276,7 @@ $ ->
 			$('#leftPanel').switchClass('span8', 'span12')
 
 	$('#btnLogin').click ->
-		view.lightbox $('#frmXmppConfig'),
+		util.lightbox $('#frmXmppConfig'),
 			title: "XMPP Configuration"
 			afterShow: -> $('#txtXmppId').focus()
 
@@ -285,7 +291,7 @@ $ ->
 
 	$('.toggleNotifications').click ->
 		if not config.notifications
-			config.notifications = view.requestNotificationPermission ->
+			config.notifications = util.requestNotificationPermission ->
 				return if typeof webkitNotifications is 'undefined' or not webkitNotifications
 				if webkitNotifications.checkPermission() is 0
 					config.notifications = true
@@ -310,6 +316,8 @@ $ ->
 	$('form').submit (e) ->
 		e.preventDefault()
 
+	$('button, a').click (e) -> track.event 'ui', e.target.id or e.target.name, e.type
+
 	window.onbeforeunload = ->
 		xmpp.conn.disconnect()
 		return
@@ -332,9 +340,11 @@ $ ->
 			$('#homeImage').animate
 				height: height
 
+		track.event 'ui', 'window', 'resize', "#{window.innerHeight}x#{window.innerWidth}"
+
 	$(window).resize()
 
-	xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val()
+	xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val(), null, config.RESOURCE
 
 	appRouter = new AppRouter();
 	Backbone.history.start
@@ -354,16 +364,16 @@ $(xmpp).bind 'error authfail connfail disconnected', (event) ->
 			messageView.postStatus "Connection has failed. Please try again."
 		when 'disconnected'
 			messageView.postStatus "Disconnected from the server."
-	view.status $('<button>').text("Reconnect").click ->
+	messageView.append $('<button>').addClass("btn btn-large btn-warning").text("Reconnect").click ->
 		messageView.empty()
-		xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val()
+		xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val(), null, config.RESOURCE
 
 $(xmpp).bind 'subject', (event, data) ->
 	messageBin[data.room].add new Message
 		type: 'status'
 		text: "Topic: #{data.subject} (set by #{data.nick})"
 	if data.room is config.currentRoom
-		view.topic data.subject
+		setTopic data.subject
 
 $(xmpp).bind 'groupMessage', (event, data) ->
 	msg = $.trim(data.text)
@@ -380,7 +390,7 @@ $(xmpp).bind 'groupMessage', (event, data) ->
 	if config.notifications and not data.self and not data.delay
 		if msg.toLowerCase().indexOf(nick.toLowerCase()) isnt -1
 			if msg.substr(0,4) is '/me ' then msg = "*#{msg.substr(4)}*"
-			view.notification
+			util.notification
 				title: "#{data.nick} (#{data.room})"
 				body: msg
 				force: data.room isnt config.currentRoom
@@ -397,7 +407,7 @@ $(xmpp).bind 'privateMessage', (event, data) ->
 		to: data.to
 		timestamp: data.delay
 	if config.notifications
-		view.notification
+		util.notification
 			title: "#{data.nick} (#{data.room})"
 			body: msg
 			force: data.room isnt config.currentRoom
@@ -405,8 +415,9 @@ $(xmpp).bind 'privateMessage', (event, data) ->
 	track.event 'message', 'chat', 'in'
 
 $(xmpp).bind 'joined', (event, data) ->
-	if data.nick is xmpp.rooms[data.room].nick
+	if data.self
 		switchRoom data.room
+		track.event 'XMPP', event.type, data.room, data.nick
 	else
 		messageBin[data.room].add new Message
 			type: 'status'
@@ -417,6 +428,7 @@ $(xmpp).bind 'parted', (event, data) ->
 		config.currentRoom = null
 		msg = "You have left #{data.room}."
 		msg += " (#{data.status})" if data.status
+		track.event 'XMPP', event.type, data.room, data.nick
 	else
 		msg = messages.parted.random().replace '{nick}', data.nick
 		msg += " (#{data.status})" if data.status
@@ -430,6 +442,7 @@ $(xmpp).bind 'kicked', (event, data) ->
 		config.currentRoom = null
 		msg = messages.meKicked.random()
 		msg += " (reason: #{data.reason})" if data.reason
+		track.event 'XMPP', event.type, data.room, data.nick
 	else
 		msg = messages.userKicked.random().replace '{nick}', data.nick
 		msg += " (reason: #{data.reason})" if data.reason
@@ -439,7 +452,7 @@ $(xmpp).bind 'kicked', (event, data) ->
 		text: msg
 
 	if data.self and config.notifications
-		view.notification
+		util.notification
 			title: "Kicked out of #{data.room}"
 			body: data.reason
 			force: true
@@ -450,6 +463,7 @@ $(xmpp).bind 'banned', (event, data) ->
 		config.currentRoom = null
 		msg = "You have been banned from this room."
 		msg += " (reason: #{data.reason})" if data.reason
+		track.event 'XMPP', event.type, data.room, data.nick
 	else
 		msg = "#{nick} has been banned from this room."
 		msg += " (reason: #{data.reason})" if data.reason
@@ -459,7 +473,7 @@ $(xmpp).bind 'banned', (event, data) ->
 		text: msg
 
 	if data.self and config.notifications
-		view.notification
+		util.notification
 			title: "Banned from #{data.room}"
 			body: data.reason
 			force: true
@@ -471,6 +485,7 @@ $(xmpp).bind 'nickChange', (event, data) ->
 		messageBin[data.room].add new Message
 			type: 'status'
 			text: messages.meNickChanged.random().replace '{nick}', data.newNick
+		track.event 'XMPP', event.type, data.room, data.newNick
 	else
 		messageBin[data.room].add new Message
 			type: 'status'

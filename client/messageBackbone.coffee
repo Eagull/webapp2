@@ -1,19 +1,17 @@
-blaze.models ?= {}
-blaze.collections ?= {}
-blaze.views ?= {}
+util = require './util'
 
-blaze.models.Message = Backbone.Model.extend
+MessageModel = Backbone.Model.extend
 	defaults:
 		type: 'muc'
 		text: ''
 		from: ''
 		to: ''
 
-blaze.collections.Messages = Backbone.Collection.extend
-	Model: blaze.models.Message
+MessageCollection = Backbone.Collection.extend
+	Model: MessageModel
 	url: "#"
 
-blaze.views.MessageView = Backbone.View.extend
+MessageView = Backbone.View.extend
 	el: '#messages'
 
 	tpl: {}
@@ -34,10 +32,9 @@ blaze.views.MessageView = Backbone.View.extend
 
 	render: () ->
 		@$el.empty()
-		console.log "cleared message view" if blaze.debug
 		# TODO: don't scroll too often in append() when calling it several times
 		@collection.forEach ((message) -> @post message), this
-		console.log "loaded message collection" if blaze.debug
+		console.log "loaded message collection"
 		this
 
 	empty: ->
@@ -81,9 +78,9 @@ blaze.views.MessageView = Backbone.View.extend
 		else
 			message = $('<span>').html @tpl.message
 		if nick not of @nickColorMap
-			@nickColorMap[nick] = blaze.util.randomColor(192)
+			@nickColorMap[nick] = util.randomColor(192)
 		$('.nick', message).text(nick).css('color', @nickColorMap[nick])
-		$('.message', message).html blaze.util.linkify msgText
+		$('.message', message).html util.linkify msgText
 
 		date = if timestamp then new Date(timestamp) else new Date()
 		timeElem = $('.timestamp', message).attr
@@ -97,13 +94,13 @@ blaze.views.MessageView = Backbone.View.extend
 	postPrivateMessage: (msgText, nickFrom, nickTo, timestamp) ->
 		message = $('<span>').html @tpl.privateMessage
 		if nickFrom not of @nickColorMap
-			@nickColorMap[nickFrom] = blaze.util.randomColor(192)
+			@nickColorMap[nickFrom] = util.randomColor(192)
 		if nickTo not of @nickColorMap
-			@nickColorMap[nickTo] = blaze.util.randomColor(192)
+			@nickColorMap[nickTo] = util.randomColor(192)
 
 		$('.nickFrom', message).text(nickFrom).css('color', @nickColorMap[nickFrom])
 		$('.nickTo', message).text(nickTo).css('color', @nickColorMap[nickTo])
-		$('.message', message).html blaze.util.linkify msgText
+		$('.message', message).html util.linkify msgText
 
 		date = if timestamp then new Date(timestamp) else new Date()
 		timeElem = $('.timestamp', message).attr
@@ -119,4 +116,9 @@ blaze.views.MessageView = Backbone.View.extend
 		msgEl.attr 'title', new Date().toLocaleTimeString()
 		@append msgEl, 'status'
 		this
+
+module.exports =
+	Model: MessageModel
+	Collection: MessageCollection
+	View: MessageView
 

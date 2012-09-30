@@ -1,8 +1,10 @@
-blaze = window.blaze or = {}
+track = require './track'
 
 Array.prototype.random = () -> @[Math.floor((Math.random()*@length))];
 
-blaze.util =
+window.delayed = (delay, func) -> setTimeout func, delay
+
+module.exports =
 	randomInt: (a, b) ->
 		b or= 0
 		max = if a > b then a else b
@@ -16,27 +18,32 @@ blaze.util =
 		text.replace pattern, '<a href="$1">$1</a>'
 
 	randomColor: (lightness = 255) ->
-		getRandomInt = ->
-			randomInt = blaze.util.randomInt(lightness).toString(16)
+		getRandomInt = =>
+			randomInt = @randomInt(lightness).toString(16)
 			if randomInt.length < 2
 				randomInt = '0' + randomInt
 			randomInt
 		'#' + getRandomInt() + getRandomInt() + getRandomInt()
 
-blaze.view =
 	notification: (opts) ->
 		return false if typeof webkitNotifications is 'undefined' or not webkitNotifications
 		return false if webkitNotifications.checkPermission() isnt 0
 		return false if document.hasFocus() and not opts.force
 		notification = webkitNotifications.createNotification "/logo16.png", opts.title or "", opts.body or ""
+		track.event 'XMPP', 'notification', 'create'
 		notification.onclick = ->
 			window.focus()
 			opts.callback() if typeof opts.callback is 'function'
 			@cancel()
+			track.event 'XMPP', 'notification', 'click'
 		notification.show()
-		setTimeout (-> notification.cancel()), opts.timeout or 15000, notification
+		timeoutCallback = ->
+			notification.cancel()
+			track.event 'XMPP', 'notification', 'timeout'
+		setTimeout timeoutCallback, opts.timeout or 30000, notification
 
 	requestNotificationPermission: (callback) ->
+		track.event 'XMPP', 'notification', 'requestPermission'
 		return false if typeof webkitNotifications is 'undefined' or not webkitNotifications
 		return true if webkitNotifications.checkPermission() is 0
 		if webkitNotifications.checkPermission() is 1

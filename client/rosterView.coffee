@@ -1,18 +1,6 @@
-blaze.views ?= {}
+xmpp = require './xmpp'
 
-blaze.models.User = Backbone.Model.extend
-	defaults:
-		nick: ''
-		room: ''
-		fullJid: ''
-		role: ''
-		affiliation: ''
-
-blaze.collections.Users = Backbone.Collection.extend
-	Model: blaze.models.Users
-	url: "#"
-
-blaze.views.RosterView = Backbone.View.extend
+module.exports = Backbone.View.extend
 	tagName: 'ul'
 
 	className: 'roster'

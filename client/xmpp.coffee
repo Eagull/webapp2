@@ -1,9 +1,7 @@
-xmpp = window.xmpp or = {}
-blaze = window.blaze
+module.exports = xmpp = {}
 
 DEFAULT_BOSH_SERVICE = 'http://xmpp.eagull.net:5280/http-bind'
 DEFAULT_USER = 'anon.eagull.net'
-RESOURCE = "webapp-#{blaze.version}-#{parseInt(Date.now()/1000)}"
 
 xmpp.rooms = {}
 joinQueue = []
@@ -115,7 +113,6 @@ xmpp.mucPresenceHandler = (p) ->
 		xmpp.rooms[room].nick = nick
 	else if not xmpp.rooms[room].joined
 		xmpp.rooms[room].roster.push nick
-		console.log "InitJoined: #{nick}, Roster:", xmpp.rooms[room].roster.toString()
 		return true
 
 	if type is 'error'
@@ -218,7 +215,7 @@ onConnect = (status) ->
 
 	true
 
-xmpp.connect = (id, passwd, service) ->
+xmpp.connect = (id, passwd, service, resource = "webapp2-#{parseInt(Date.now()/1000)}") ->
 	if xmpp.conn and (xmpp.conn.connecting or xmpp.conn.connected)
 		xmpp.conn.disconnect()
 
@@ -226,7 +223,7 @@ xmpp.connect = (id, passwd, service) ->
 	xmpp.conn = new Strophe.Connection service
 
 	id or= DEFAULT_USER
-	id = Strophe.getBareJidFromJid(id) + '/' + RESOURCE
+	id = Strophe.getBareJidFromJid(id) + '/' + resource
 	passwd or= ''
 	xmpp.conn.connect id, passwd, onConnect
 
