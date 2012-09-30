@@ -68,15 +68,20 @@ html(itemscope, itemtype="http://schema.org/Product")
 								li
 									a.changeNickname change nickname
 						li
-							a.btnRoomContent(x-type='roster') current users
+							a.messageView.btnRoomContent(x-type='roster') current users
 						li
 							a(href='/usage') usage guide
 
 		#nav-spacer.visible-desktop
-		#content.container-fluid
-			.row-fluid.hidden-phone
+
+		.contentView.container-fluid
+			.row-fluid
+				.span12#content
+
+		.messageView.container-fluid
+			.row-fluid.hidden-phone#topicContainer(style="display:none")
 				.span12
-					pre#topicContainer(style="display:none")
+					pre
 						h4#topic
 			.row-fluid
 				.span12.scrollPanel#leftPanel
@@ -86,9 +91,9 @@ html(itemscope, itemtype="http://schema.org/Product")
 					#contentPanel
 						#roster
 
-		#messageTypingBar(style='display:none')
-			input#messageBox(placeholder="Type a message here.")
-			button#btnSend.btn.btn-large.btn-primary Send
+			#messageTypingBar(style='display:none')
+				input#messageBox(placeholder="Type a message here.")
+				button#btnSend.btn.btn-large.btn-primary Send
 
 		#templates(style='display:none')
 			form#frmXmppConfig

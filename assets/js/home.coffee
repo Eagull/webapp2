@@ -1,28 +1,32 @@
 blaze.views ?= {}
-config = blaze.config ?= {}
 
 blaze.views.HomeView = Backbone.View.extend
 
-	initialize: (docId) ->
-		console.log "initializing home view" if blaze.debug
-		@render(docId)
+	el: '#content'
 
-	render: (docId) ->
+	initialize: (@docId, @callback) ->
+		console.log "initializing home view" if blaze.debug
+		@render()
+
+	render: () ->
 		myEl = @$el
 		console.log "rendering home view" if blaze.debug
 		$.fancybox.showLoading()
 		request = $.ajax
-			url: "http://content.dragonsblaze.com/json/" + docId
+			url: "http://content.dragonsblaze.com/json/" + @docId
 			dataType: 'jsonp'
 			jsonpCallback: -> "cb" + Date.now()
 
-		request.done (data) ->
+		request.done (data) =>
 			myEl.html data.content
 			console.log "home: painted HTML" if blaze.debug
+			@callback?(null, data)
+			return
 
-		request.fail (err) ->
+		request.fail (err) =>
 			console.error err
 			myEl.html err
+			@callback?(err)
 
 		request.always ->
 			$.fancybox.hideLoading()

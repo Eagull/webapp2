@@ -169,25 +169,32 @@ AppRouter = Backbone.Router.extend
 		'*path':  'home'
 
 	home: ->
-		$('#topicContainer').hide()
-		$('#messageTypingBar').hide()
-		homeView = new blaze.views.HomeView("1QxC1VCMlZbQrFYy8Ijr1XvyyYxpj8m9x4zuQgVu1G3w")
-		messageView.$el.empty().append(homeView.el)
-		btn = $('<a>').addClass("btn btn-large btn-success btnRoom").text('Join the conversation!')
-		messageView.$el.append btn.attr('href', '/room/' + config.ROOM)
+		config.currentRoom = null
+		$('.messageView').fadeOut(-> $('.contentView').fadeIn())
+		homeView = new blaze.views.HomeView "1QxC1VCMlZbQrFYy8Ijr1XvyyYxpj8m9x4zuQgVu1G3w", ->
+			btn = $('<a>').addClass("btn btn-large btn-success btnRoom").text('Join the conversation!')
+			homeView.$el.append btn.attr('href', '/room/' + config.ROOM)
+			img = $('#homeImage').hide()
+			if not img.length
+				img = $('<img>').attr('src', '/logo.png').attr('id', 'homeImage')
+				img.load -> img.fadeIn -> $(window).resize()
+			homeView.$el.append img
+			$(window).resize()
 
 	usage: ->
-		$('#topicContainer').hide()
-		$('#messageTypingBar').hide()
+		config.currentRoom = null
+		$('.messageView').fadeOut(-> $('.contentView').fadeIn())
 		usageView = new blaze.views.HomeView("1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80")
-		messageView.$el.empty().append(usageView.el)
 
 	room: (jid) ->
+		$('.contentView').fadeOut -> $('.messageView').fadeIn -> $(window).resize()
 		checkNickAndJoinRoom(jid)
 		return true
 
 $ ->
 	messageView = new blaze.views.MessageView()
+
+	$('.messageView').hide()
 
 	if $.browser.mozilla then document.body.style.fontSize = "14px"
 
@@ -306,13 +313,23 @@ $ ->
 		return
 
 	$(window).resize ->
-		view.cache or= {}
-		messagesTop = $('#leftPanel').offset().top
-		view.cache.messageBoxHeight or= $('#messageBox').outerHeight()
-		$leftPanel = $('#leftPanel')
-		scrollBottom = $leftPanel.scrollTop()  + $leftPanel.height()
-		$('.scrollPanel').height(window.innerHeight - messagesTop - view.cache.messageBoxHeight - 10)
-		$leftPanel.scrollTop(scrollBottom - $leftPanel.height())
+
+		if $('#messageView').is(':visible')
+			$leftPanel = $('#leftPanel')
+			messagesTop = $leftPanel.offset().top
+			if $('#messageTypingBar').css('display') is 'none'
+				messageBoxHeight = 0
+			else
+				messageBoxHeight = $('#messageBox').outerHeight()
+			scrollBottom = $leftPanel.scrollTop()  + $leftPanel.height()
+			$('.scrollPanel').height(window.innerHeight - messagesTop - messageBoxHeight - 10)
+			$leftPanel.scrollTop(scrollBottom - $leftPanel.height())
+
+		if $('#homeImage').is(':visible')
+			height = window.innerHeight - $('#content').position().top - $('#content').height()
+			$('#homeImage').animate
+				height: height
+
 	$(window).resize()
 
 	xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val()
