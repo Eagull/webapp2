@@ -28,7 +28,8 @@ checkNickAndJoinRoom = (room) ->
 			joinRoom room, nick
 			return
 
-	view.lightbox $('#frmNickname'),
+	config.frmNickname ?= $('#frmNickname')
+	view.lightbox config.frmNickname,
 		afterShow: ->
 			$('.btnSaveNickname').unbind()
 			$('.btnSaveNickname').click ->
@@ -188,7 +189,7 @@ AppRouter = Backbone.Router.extend
 
 	room: (jid) ->
 		$('.contentView').fadeOut -> $('.messageView').fadeIn -> $(window).resize()
-		checkNickAndJoinRoom(jid)
+		$ -> checkNickAndJoinRoom(jid)
 		return true
 
 $ ->
@@ -235,7 +236,8 @@ $ ->
 	$('.dropdown-menu a').click -> $('.dropdown.open .dropdown-toggle').dropdown('toggle');
 
 	$('a.changeNickname').click ->
-		view.lightbox $('#frmNickname'),
+		config.frmNickname ?= $('#frmNickname')
+		view.lightbox config.frmNickname,
 			afterShow: ->
 				$txtNick = $('#txtNickname')
 				$('.btnSaveNickname').unbind()
