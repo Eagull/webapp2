@@ -78,7 +78,7 @@ app.get '/*', (req, res) ->
 
 	viewParams =
 		docMap: JSON.stringify contentMap
-		version: JSON.stringify version
+		version: version
 		devMode: debug
 
 	if page of contentMap
