@@ -1,13 +1,16 @@
 process.env.NODE_ENV ?= 'dev'
+debug = process.env.NODE_ENV isnt 'production'
 
 util = require 'util'
 express = require 'express'
+fs = require 'fs'
 
 version = "unknown"
-exec = require('child_process').exec
-exec 'git rev-parse --short HEAD', (err, stdout, stderr) ->
-	version = stdout.replace '\n', ''
-	util.log "Version: #{version}"
+gitsha = require 'gitsha'
+gitsha '.', (error, output) ->
+	if error then return console.error output
+	version = output
+	util.log "[#{process.env.NODE_ENV}, #{process.pid}] version: #{output}"
 
 app = express.createServer()
 io = require('socket.io').listen(app)
@@ -16,11 +19,9 @@ app.set 'view options',
 	layout: false
 
 app.configure 'dev', ->
-	app.use express.logger 'dev'
 	io.set 'log level', 2
 
 app.configure 'production', ->
-	app.use express.logger()
 	io.set 'log level', 1
 	io.enable 'browser client minification'
 	io.enable 'browser client etag'
@@ -40,5 +41,9 @@ io.on 'connection', (socket) ->
 		io.sockets.emit 'messageReceived', message
 
 app.listen process.env.PORT || 1337, ->
-	util.log util.format "[%s] http://%s:%d/", process.env.NODE_ENV, app.address().address, app.address().port
+	addr = app.address().address
+	port = app.address().port
+	util.log "[#{process.env.NODE_ENV}, #{process.pid}] http://#{addr}:#{port}/"
+
+module.exports = app
 
