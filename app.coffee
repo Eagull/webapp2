@@ -18,6 +18,15 @@ io = require('socket.io').listen(app)
 app.set 'view options',
 	layout: false
 
+accessLogStream = fs.createWriteStream './access.log',
+	flags: 'a'
+	encoding: 'utf8'
+	mode: 0o0644
+
+app.use express.logger
+	format: if debug then 'dev' else 'default'
+	stream: accessLogStream
+
 app.configure 'dev', ->
 	io.set 'log level', 2
 
