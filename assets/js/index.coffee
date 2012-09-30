@@ -314,7 +314,7 @@ $ ->
 
 	$(window).resize ->
 
-		if $('#messageView').is(':visible')
+		if $('.messageView').is(':visible')
 			$leftPanel = $('#leftPanel')
 			messagesTop = $leftPanel.offset().top
 			if $('#messageTypingBar').css('display') is 'none'
