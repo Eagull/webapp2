@@ -11,9 +11,10 @@
   ],
   "description": "the webapp that powers eagull.net",
   "dependencies": {
-    "colors": "~0.6.0-1",
+    "colors": "~0.6",
     "gitsha": "0.0.1",
     "gitpull": "https://github.com/aadityabhatia/gitpull/tarball/master",
+    "request": "~2.11",
     "socket.io": "~0.9",
     "jade": "~0.25",
     "connect-assets": "~2.1",
