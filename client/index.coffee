@@ -171,14 +171,15 @@ commands =
 AppRouter = Backbone.Router.extend
 	routes:
 		'': 'home'
+		'home': 'home'
 		'room/:jid': 'room'
-		'usage': 'usage'
-		'*path':  'home'
+		':docKey':  'doc'
+		'*path': 'home'
 
 	home: ->
 		config.currentRoom = null
 		$('.messageView').fadeOut(-> $('.contentView').fadeIn())
-		homeView = new ContentView "1QxC1VCMlZbQrFYy8Ijr1XvyyYxpj8m9x4zuQgVu1G3w", ->
+		homeView = new ContentView window.global.docMap['home'], ->
 			btn = $('<a>').addClass("btn btn-large btn-success btnRoom").text('Join the conversation!')
 			homeView.$el.append btn.attr('href', '/room/' + config.ROOM)
 			img = $('#homeImage').hide()
@@ -188,15 +189,19 @@ AppRouter = Backbone.Router.extend
 			homeView.$el.append img
 			$(window).resize()
 
-	usage: ->
-		config.currentRoom = null
-		$('.messageView').fadeOut(-> $('.contentView').fadeIn())
-		usageView = new ContentView("1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80")
-
 	room: (jid) ->
 		$('.contentView').fadeOut -> $('.messageView').fadeIn -> $(window).resize()
 		$ -> checkNickAndJoinRoom(jid)
 		return true
+	
+	doc: (docKey) =>
+		console.log "Routing to:", docKey
+		if docKey not of window.global.docMap
+			return @home()
+		
+		config.currentRoom = null
+		$('.messageView').fadeOut(-> $('.contentView').fadeIn())
+		new ContentView(window.global.docMap[docKey])
 
 $ ->
 	messageView = new MessageBackbone.View()

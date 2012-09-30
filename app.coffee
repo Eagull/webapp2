@@ -66,6 +66,8 @@ app.configure ->
 contentMap =
 	home: "1QxC1VCMlZbQrFYy8Ijr1XvyyYxpj8m9x4zuQgVu1G3w"
 	usage: "1Faa0akTtbOgC2k6RRjl_xRamsAYJwzFgzJb6GJ0nb80"
+	terms: "1-TwAcDexcW7a1PakgQJRrHr07ZXJf_ovF1KbTPzvHns"
+	privacy: "1sYF5bq56pj12Q8E9md5Y_0hFQu0vRmpdMtyzHa0qEL8"
 
 appPages = ['room']
 contentCache = {}
