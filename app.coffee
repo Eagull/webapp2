@@ -12,7 +12,7 @@ gitsha = require 'gitsha'
 gitsha '.', (error, output) ->
 	if error then return console.error output
 	version = output
-	util.log "[#{process.env.NODE_ENV}, #{process.pid}] version: #{output}"
+	util.log "[#{process.pid}] env: #{process.env.NODE_ENV.magenta}, version: #{output.magenta}"
 
 app = express.createServer()
 io = require('socket.io').listen(app)
@@ -77,7 +77,7 @@ io.on 'connection', (socket) ->
 app.listen process.env.PORT || 1337, ->
 	addr = app.address().address
 	port = app.address().port
-	util.log "[#{process.env.NODE_ENV}, #{process.pid}] http://#{addr}:#{port}/"
+	util.log "[#{process.pid}] http://#{addr}:#{port}/"
 
 module.exports = app
 
