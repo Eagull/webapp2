@@ -53,6 +53,10 @@ module.exports =
 				webkitNotifications.requestPermission()
 		return false
 
+	notificationHavePermission: ->
+		return false if typeof webkitNotifications is 'undefined' or not webkitNotifications
+		webkitNotifications.checkPermission() is 0
+
 	lightbox: (content, opts) ->
 		$.extend opts,
 			closeBtn: false

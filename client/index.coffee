@@ -297,8 +297,7 @@ $ ->
 	$('.toggleNotifications').click ->
 		if not config.notifications
 			config.notifications = util.requestNotificationPermission ->
-				return if typeof webkitNotifications is 'undefined' or not webkitNotifications
-				if webkitNotifications.checkPermission() is 0
+				if util.notificationHavePermission()
 					config.notifications = true
 					updateNotificationOption()
 		else
@@ -307,7 +306,10 @@ $ ->
 		localStorage.setItem 'config-notifications', if config.notifications then '1' else ''
 		updateNotificationOption()
 
-	config.notifications = !!localStorage.getItem('config-notifications')
+	notificationConfig = localStorage.getItem('config-notifications')
+	if notificationConfig is null and util.notificationHavePermission()
+		notificationConfig = true
+	config.notifications = !!notificationConfig
 	updateNotificationOption()
 
 	$(document).on 'click', 'a', (e) ->
