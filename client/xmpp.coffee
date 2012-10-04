@@ -4,7 +4,7 @@ DEFAULT_BOSH_SERVICE = 'http://xmpp.eagull.net:5280/http-bind'
 DEFAULT_USER = 'anon.eagull.net'
 
 xmpp.rooms = {}
-joinQueue = []
+joinQueue = {}
 
 xmpp.send = (to, msg, attr) ->
 	attr = attr or {}
@@ -12,24 +12,27 @@ xmpp.send = (to, msg, attr) ->
 	attr.type = attr.type or 'groupchat'
 	xmpp.conn.send($msg(attr).c('body', null, msg))
 
-xmpp.join = (room, nick) ->
+xmpp.join = (jid, nick) ->
 	if not xmpp.conn.connected
-		joinQueue.push
-			room: room
-			nick: nick
+		joinQueue[jid] = nick: nick
 		return
-	xmpp.conn.send $pres({from: xmpp.conn.jid, to: room + '/' + nick}).c('x', {xmlns: Strophe.NS.MUC })
-	xmpp.rooms[room] =
+	xmpp.conn.send $pres({from: xmpp.conn.jid, to: jid + '/' + nick}).c('x', {xmlns: Strophe.NS.MUC })
+	xmpp.rooms[jid] =
 		nick: nick
 		roster: []
 
 $(xmpp).bind 'connected', ->
 	if not xmpp.conn.connected
 		return console.error "XMPP 'connected' triggered while `xmpp.conn.connected` is false"
-	joinQueueCopy = $.merge [], joinQueue
-	joinQueue = []
-	for roomObj in joinQueueCopy
-		xmpp.join roomObj.room, roomObj.nick
+
+	for jid, room of xmpp.rooms
+		if not room.joined
+			joinQueue[jid] = nick: room.nick 
+
+	xmpp.join jid, room.nick for jid, room of joinQueue
+	joinQueue = {}
+
+$(xmpp).bind 'error connfail disconnected', -> room.joined = false for jid, room of xmpp.rooms
 
 xmpp.part = (room, msg) ->
 	p = $pres

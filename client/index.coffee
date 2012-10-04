@@ -387,6 +387,7 @@ $(xmpp).bind 'error authfail connfail disconnected', (event) ->
 	messageView.append $('<button>').addClass("btn btn-large btn-warning").text("Reconnect").click ->
 		messageView.empty()
 		xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val(), null, config.RESOURCE
+		messageView.postStatus "Reconnecting..."
 
 $(xmpp).bind 'subject', (event, data) ->
 	messageBin[data.room].add new Message
