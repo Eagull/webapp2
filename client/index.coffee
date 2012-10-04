@@ -77,10 +77,15 @@ sendMessage = (msg) ->
 
 	if msg[0] is '/'
 		args = msg.substr(1).split(' ')
-		command = args.shift()
-		if commands[command]
+		commandName = args.shift()
+		for cmd of commands
+			if cmd.toLowerCase() is commandName.toLowerCase()
+				command = commands[cmd]
+				break
+		if command
 			track.event 'command', command, args.join ' '
-			return if commands[command].call(undefined, args)
+			command.call(undefined, args)
+			return
 
 	if msg[0] is '@'
 		nick = msg.substr(1).split(' ', 1)[0]
@@ -167,6 +172,9 @@ commands =
 		else
 			messageView.postStatus "Users: " + xmpp.rooms[config.currentRoom].roster.join(', ')
 		true
+
+	sendButton: ->
+		$('#btnSend').fadeToggle()
 
 AppRouter = Backbone.Router.extend
 	routes:
