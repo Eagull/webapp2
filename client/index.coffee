@@ -17,7 +17,11 @@ rosterViews = {}
 
 config.ROOM = if debug then 'test@chat.eagull.net' else 'firemoth@chat.eagull.net'
 config.RESOURCE = "webapp-#{window.global.version}-#{parseInt(Date.now()/1000)}"
-if debug then config.RESOURCE += "-dev"
+
+if debug
+	config.RESOURCE += "-dev"
+	window.xmpp = xmpp
+	window.config = config
 
 setTopic = (topic) ->
 	if not topic and config.currentRoom of xmpp.rooms
@@ -106,6 +110,7 @@ sendMessage = (msg) ->
 
 	if config.currentRoom and config.currentRoom of xmpp.rooms
 		xmpp.conn.muc.groupchat config.currentRoom, msg
+		track.event 'message', 'groupchat', 'out'
 	else
 		messageView.postStatus messages.actionImpossible.random()
 
@@ -201,12 +206,12 @@ AppRouter = Backbone.Router.extend
 		$('.contentView').fadeOut -> $('.messageView').fadeIn -> $(window).resize()
 		$ -> checkNickAndJoinRoom(jid)
 		return true
-	
+
 	doc: (docKey) =>
 		console.log "Routing to:", docKey
 		if docKey not of window.global.docMap
 			return @home()
-		
+
 		config.currentRoom = null
 		$('.messageView').fadeOut(-> $('.contentView').fadeIn())
 		new ContentView(window.global.docMap[docKey])
@@ -401,7 +406,8 @@ $(xmpp).bind 'groupMessage', (event, data) ->
 		timestamp: data.delay
 
 	nick = xmpp.rooms[data.room].nick
-	track.event 'message', 'groupchat', if data.nick is nick then 'out' else 'in'
+	if not data.self and not data.delay
+		track.event 'message', 'groupchat', 'in'
 	if config.notifications and not data.self and not data.delay
 		if msg.toLowerCase().indexOf(nick.toLowerCase()) isnt -1
 			if msg.substr(0,4) is '/me ' then msg = "*#{msg.substr(4)}*"

@@ -18,10 +18,10 @@ gitsha '.', (error, output) ->
 	util.log "[#{process.pid}] env: #{process.env.NODE_ENV.magenta}, version: #{output.magenta}"
 
 bundle = browserify
-		mount: "/app.js"
-		watch: debug
-		debug: debug
-		filter: if debug then String else require 'uglify-js'
+	mount: "/app.js"
+	watch: debug
+	debug: debug
+	filter: if debug then String else require 'uglify-js'
 
 jadeRuntime = require('fs').readFileSync(__dirname+"/node_modules/jade/runtime.js", 'utf8')
 bundle.prepend jadeRuntime
