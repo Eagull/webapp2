@@ -12,7 +12,7 @@ require 'colors'
 
 version = "unknown"
 gitsha = require 'gitsha'
-gitsha '.', (error, output) ->
+gitsha __dirname, (error, output) ->
 	if error then return console.error output
 	version = output
 	util.log "[#{process.pid}] env: #{process.env.NODE_ENV.magenta}, version: #{output.magenta}"
@@ -30,11 +30,12 @@ bundle.register '.jade', (body) ->
 		"client": true
 		"compileDebug": false
 	template = "module.exports = " + templateFn.toString() + ";"
-bundle.addEntry "./client/index.coffee"
+bundle.addEntry __dirname + "/client/index.coffee"
 
 app = express.createServer()
 io = require('socket.io').listen(app)
 
+app.set 'views', __dirname + '/views'
 app.set 'view options', layout: false
 
 accessLogStream = fs.createWriteStream './access.log',
@@ -59,9 +60,9 @@ app.configure ->
 	app.use express.responseTime()
 	app.use bundle
 	app.use stylus.middleware
-		src: 'views'
+		src: __dirname + '/views'
 		dest: __dirname + '/public'
-	app.use express.static(__dirname + '/public')
+	app.use express.static __dirname + '/public'
 
 contentMap =
 	home: "1QxC1VCMlZbQrFYy8Ijr1XvyyYxpj8m9x4zuQgVu1G3w"
