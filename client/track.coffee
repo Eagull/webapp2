@@ -1,6 +1,7 @@
 window._gaq or = [];
 
-window._gaq.push(['_setAccount', window.global.debug ? 'UA-21159963-7' : 'UA-21159963-8'], ['_trackPageview']);
+account = if window.global.debug then 'UA-21159963-7' else 'UA-21159963-8'
+window._gaq.push(['_setAccount', account], ['_trackPageview']);
 
 module.exports =
 	event: (args...) ->
