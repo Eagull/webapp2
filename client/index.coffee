@@ -26,7 +26,9 @@ if debug
 setTopic = (topic) ->
 	if not topic and config.currentRoom of xmpp.rooms
 		topic = xmpp.rooms[config.currentRoom].subject
-	$('#topic').text topic or config.currentRoom
+	if topic
+		topic = util.linkify $('<div>').html(topic).text()
+	$('#topic').html topic or config.currentRoom
 	$('#topicContainer').slideDown(-> $(window).resize())
 
 checkNickAndJoinRoom = (room) ->
