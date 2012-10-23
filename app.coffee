@@ -55,6 +55,11 @@ app.configure 'production', ->
 	io.enable 'browser client minification'
 	io.enable 'browser client etag'
 	io.enable 'browser client gzip'
+	app.use (req, res, next) ->
+		if not res.getHeader 'Cache-Control'
+			maxAge = 86400 # seconds in one day
+			res.setHeader 'Cache-Control', 'public, max-age=' + maxAge
+		next()
 
 app.configure ->
 	app.use express.responseTime()
