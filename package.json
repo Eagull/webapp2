@@ -13,7 +13,7 @@
   "dependencies": {
     "colors": "~0.6",
     "gitsha": "0.0.1",
-    "gitpull": "https://github.com/aadityabhatia/gitpull/tarball/master",
+    "git-pull": "~0.1",
     "request": "~2.11",
     "socket.io": "~0.9",
     "jade": "~0.25",

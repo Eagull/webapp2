@@ -4,7 +4,7 @@ if not cluster.isMaster then return require './app'
 
 util = require 'util'
 express = require 'express'
-gitpull = require 'gitpull'
+gitpull = require 'git-pull'
 gitsha = require 'gitsha'
 require 'colors'
 
