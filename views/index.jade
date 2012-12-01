@@ -26,6 +26,7 @@ html(itemscope, itemtype="http://schema.org/Product")
 		link(href='http://fonts.googleapis.com/css?family=Architects+Daughter&text=EAGULL', rel='stylesheet', type='text/css')
 		link(href='http://fonts.googleapis.com/css?family=Ubuntu:300', rel='stylesheet', type='text/css')
 		link(href='http://fonts.googleapis.com/css?family=Happy+Monkey', rel='stylesheet', type='text/css')
+		link(rel="chrome-webstore-item", href="https://chrome.google.com/webstore/detail/jefmfopneeokimmfhhchichliigkjbhm")
 
 		link(href='/lib/bootstrap.css', rel='stylesheet', type='text/css')
 		link(href='/global.css?#{version}', rel='stylesheet', type='text/css')
@@ -58,6 +59,8 @@ html(itemscope, itemtype="http://schema.org/Product")
 									a.toggleNotifications enable notifications
 								li
 									a.changeNickname change nickname
+						li
+							a.btnChromeInstall(style='display:none') get chrome app
 						li
 							a.messageView.btnRoomContent(x-type='roster') current users
 						li

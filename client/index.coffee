@@ -221,6 +221,9 @@ AppRouter = Backbone.Router.extend
 $ ->
 	if $.browser.mozilla then document.body.style.fontSize = "14px"
 
+	if $.browser.chrome and chrome.webstore and not chrome.app.isInstalled
+		$('.btnChromeInstall').fadeIn()
+
 $ ->
 	messageView = new MessageBackbone.View()
 	$('.messageView').hide()
@@ -310,6 +313,11 @@ $ ->
 			$('.toggleNotifications').text 'disable notifications'
 		else
 			$('.toggleNotifications').text 'enable notifications'
+
+	$('.btnChromeInstall').click ->
+		onSuccess = -> $('.btnChromeInstall').fadeOut()
+		onFailure = (err) -> console.error err
+		chrome.webstore.install(undefined, onSuccess, onFailure)
 
 	$('.toggleNotifications').click ->
 		if not config.notifications
