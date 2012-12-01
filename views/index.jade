@@ -49,8 +49,6 @@ html(itemscope, itemtype="http://schema.org/Product")
 							a(href='/room/firemoth@chat.eagull.net') FireMoth
 						li
 							a(href='/room/chaosmoth@chat.eagull.net') ChaosMoth
-						li
-							a.btnLightTemplate(x-template='frmJoinRoom') +
 					ul.hidden-phone.nav.pull-right
 						li.dropdown
 							a.dropdown-toggle(data-toggle="dropdown") options
@@ -101,16 +99,6 @@ html(itemscope, itemtype="http://schema.org/Product")
 				input.input-xlarge.persistent#txtNickname(type='text', required='required', maxlength=20, pattern="^ *[A-Za-z0-9]+ *$", placeholder="English letter and numbers only!")
 				.btnGroup
 					button.btn.btn-primary.btnSaveNickname Save
-
-			form#frmJoinRoom
-				h2 Join a chatroom
-				label Invitation Code
-					input.input-text
-				button.big.nice.green.button Join
-
-			form#frmCreateRoom
-				label Name
-					input.input-text
 
 			#tplMessage
 				| <

@@ -119,7 +119,9 @@ xmpp.mucPresenceHandler = (p) ->
 		return true
 
 	if type is 'error'
-		console.error p
+		$(xmpp).triggerHandler 'error',
+			stanza: p
+		return
 
 	if type is 'unavailable'
 		i = xmpp.rooms[room].roster.indexOf nick
@@ -235,3 +237,4 @@ xmpp.connect = (id, passwd, service, resource = "webapp2-#{parseInt(Date.now()/1
 			console.debug "RECV: " + data
 		xmpp.conn.rawOutput = (data) ->
 			console.debug "SENT: " + data
+

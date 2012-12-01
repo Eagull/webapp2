@@ -345,6 +345,7 @@ $ ->
 
 	window.onbeforeunload = ->
 		xmpp.conn.disconnect()
+		xmpp.conn.flush()
 		return
 
 	$(window).resize ->
@@ -401,6 +402,9 @@ $(xmpp).bind 'subject', (event, data) ->
 		text: "Topic: #{data.subject} (set by #{data.nick})"
 	if data.room is config.currentRoom
 		setTopic data.subject
+
+$(xmpp).bind 'error', (event, data) ->
+	console.error JSON.stringify data.stanza
 
 $(xmpp).bind 'groupMessage', (event, data) ->
 	msg = $.trim(data.text)
