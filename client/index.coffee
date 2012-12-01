@@ -219,12 +219,13 @@ AppRouter = Backbone.Router.extend
 		new ContentView(window.global.docMap[docKey])
 
 $ ->
-	messageView = new MessageBackbone.View()
-
-	$('.messageView').hide()
-
 	if $.browser.mozilla then document.body.style.fontSize = "14px"
 
+$ ->
+	messageView = new MessageBackbone.View()
+	$('.messageView').hide()
+
+$ ->
 	$("input.persistent, textarea.persistent").each (index, element) ->
 		value = localStorage.getItem 'field-' + (element.name || element.id)
 		element.value = value if value
@@ -300,6 +301,7 @@ $ ->
 			title: "XMPP Configuration"
 			afterShow: -> $('#txtXmppId').focus()
 
+$ ->
 	if typeof webkitNotifications is 'undefined' or not webkitNotifications
 		$('.toggleNotifications').parent().remove()
 
@@ -327,6 +329,7 @@ $ ->
 	config.notifications = !!notificationConfig
 	updateNotificationOption()
 
+$ ->
 	$(document).on 'click', 'a', (e) ->
 		if e.target.host is document.location.host
 			appRouter.navigate e.target.pathname,
@@ -368,6 +371,7 @@ $ ->
 
 	xmpp.connect $('#txtXmppId').val(), $('#txtXmppPasswd').val(), null, config.RESOURCE
 
+$ ->
 	appRouter = new AppRouter();
 	Backbone.history.start
 		pushState: true
