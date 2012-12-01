@@ -70,3 +70,32 @@ module.exports =
 						left: '0px'
 		$.fancybox content, opts
 
+	getClientTag: ->
+		if window.chrome?.app?.isInstalled
+			resource = "chrome"
+		else
+			resource = "web"
+			if $.browser.chrome
+				resource += "-ch"
+			else if $.browser.mozilla
+				resource += "-mz"
+			else if $.browser.msie
+				resource += "-ie"
+			else if $.browser.webkit
+				resource += "-wk"
+		resource
+
+	getClientId: ->
+		if !!localStorage
+			cId = localStorage['cId'] or= @randomInt(36*36*36*36*36, 36*36*36*36*36*36).toString(36)
+		else
+			cId = $.cookie 'cId'
+			if not cId
+				cId = @randomInt(36*36*36*36*36, 36*36*36*36*36*36).toString(36)
+				$.cookie 'cId', cId,
+					expires: 3000
+					path: '/'
+		cId
+
+	getSessionId: -> ((parseInt(Date.now()/1000) % 1260) + 36).toString(36)
+

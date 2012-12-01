@@ -16,7 +16,7 @@ messageBin = {}
 rosterViews = {}
 
 config.ROOM = if debug then 'test@chat.eagull.net' else 'firemoth@chat.eagull.net'
-config.RESOURCE = "webapp-#{window.global.version}-#{parseInt(Date.now()/1000)}"
+config.RESOURCE = "#{util.getClientTag()}-#{window.global.version}-#{util.getClientId()}-#{util.getSessionId()}"
 
 if debug
 	config.RESOURCE += "-dev"
