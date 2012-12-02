@@ -58,7 +58,7 @@ module.exports =
 		webkitNotifications.checkPermission() is 0
 
 	lightbox: (content, opts) ->
-		$.extend opts,
+		settings =
 			closeBtn: false
 			helpers:
 				overlay:
@@ -68,7 +68,8 @@ module.exports =
 						right: '0px'
 						bottom: '0px'
 						left: '0px'
-		$.fancybox content, opts
+		$.extend true, settings, opts
+		$.fancybox content, settings
 
 	getClientTag: ->
 		if window.chrome?.app?.isInstalled

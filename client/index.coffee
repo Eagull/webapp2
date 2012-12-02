@@ -31,6 +31,24 @@ setTopic = (topic) ->
 	$('#topic').html topic or config.currentRoom
 	$('#topicContainer').slideDown(-> $(window).resize())
 
+showNicknameForm = (onSuccess) ->
+	config.frmNickname ?= $('#frmNickname')
+	util.lightbox config.frmNickname,
+		modal: false
+		closeBtn: true
+		afterShow: ->
+			$txtNick = $('#txtNickname')
+			originalNick = $txtNick.val().trim()
+			$('.btnSaveNickname').unbind()
+			$('.btnSaveNickname').click ->
+				nick = $txtNick.val().trim()
+				if nick and /^[a-z0-9]+$/i.test(nick)
+					onSuccess?(nick, originalNick isnt nick)
+					$.fancybox.close()
+				else
+					$txtNick.val('').focus()
+			$txtNick.focus()
+
 checkNickAndJoinRoom = (room) ->
 	$txtNick = $('#txtNickname')
 	if $txtNick.val()
@@ -40,24 +58,14 @@ checkNickAndJoinRoom = (room) ->
 			joinRoom room, nick
 			return
 
-	config.frmNickname ?= $('#frmNickname')
-	util.lightbox config.frmNickname,
-		afterShow: ->
-			$('.btnSaveNickname').unbind()
-			$('.btnSaveNickname').click ->
-				nick = $txtNick.val().trim()
-				if nick and /^[a-z0-9]+$/i.test(nick)
-					console.log "Joining", room
-					joinRoom room, nick
-					$.fancybox.close()
-				else
-					$txtNick.val('').focus()
-			$txtNick.focus()
+	showNicknameForm (nick) ->
+		console.log "Joining", room
+		joinRoom room, nick
 
-joinRoom = (room, nick) ->
+joinRoom = (room, nick = $('#txtNickname').val()) ->
 	if room not of messageBin
 		messageBin[room] = new MessageBackbone.Collection()
-	if room not of xmpp.rooms
+	if room not of xmpp.rooms or not xmpp.rooms[room].joined
 		messageBin[room].reset()
 		xmpp.join room, nick
 		$.fancybox.showLoading()
@@ -183,6 +191,8 @@ commands =
 	sendButton: ->
 		$('#btnSend').fadeToggle()
 
+appRouter = null
+
 AppRouter = Backbone.Router.extend
 	routes:
 		'': 'home'
@@ -267,18 +277,8 @@ $ ->
 
 	$('a.changeNickname').click ->
 		config.frmNickname ?= $('#frmNickname')
-		util.lightbox config.frmNickname,
-			afterShow: ->
-				$txtNick = $('#txtNickname')
-				$('.btnSaveNickname').unbind()
-				$('.btnSaveNickname').click ->
-					nick = $txtNick.val().trim()
-					if nick and /^[a-z0-9]+$/i.test(nick)
-						xmpp.conn.muc.changeNick(config.currentRoom, nick) if config.currentRoom
-						$.fancybox.close()
-					else
-						$txtNick.val('').focus()
-				$txtNick.focus()
+		showNicknameForm (nick) ->
+			xmpp.conn.muc.changeNick(config.currentRoom, nick) if config.currentRoom
 
 	$('.btnRoomContent').click (e) ->
 		e.preventDefault()
@@ -411,8 +411,14 @@ $(xmpp).bind 'subject', (event, data) ->
 	if data.room is config.currentRoom
 		setTopic data.subject
 
-$(xmpp).bind 'error', (event, data) ->
-	console.error JSON.stringify data.stanza
+$(xmpp).bind 'presenceError', (event, data) ->
+	util.lightbox "<h2>Error</h2><p>#{data.desc}</p>",
+		afterClose: ->
+			if data.changeNick then showNicknameForm (nick, changed) ->
+				if changed
+					joinRoom data.room
+				else if data.goHome then appRouter.navigate '/', trigger: true
+			else if data.goHome then appRouter.navigate '/', trigger: true
 
 $(xmpp).bind 'groupMessage', (event, data) ->
 	msg = $.trim(data.text)
@@ -505,7 +511,7 @@ $(xmpp).bind 'banned', (event, data) ->
 		msg += " (reason: #{data.reason})" if data.reason
 		track.event 'XMPP', event.type, data.room, data.nick
 	else
-		msg = "#{nick} has been banned from this room."
+		msg = "#{data.nick} has been banned from this room."
 		msg += " (reason: #{data.reason})" if data.reason
 
 	messageBin[data.room].add new Message

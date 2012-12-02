@@ -27,7 +27,7 @@ $(xmpp).bind 'connected', ->
 
 	for jid, room of xmpp.rooms
 		if not room.joined
-			joinQueue[jid] = nick: room.nick 
+			joinQueue[jid] = nick: room.nick
 
 	xmpp.join jid, room.nick for jid, room of joinQueue
 	joinQueue = {}
@@ -102,13 +102,57 @@ xmpp.mucPresenceHandler = (p) ->
 
 	room = Strophe.getBareJidFromJid p.getAttribute 'from'
 	nick = Strophe.getResourceFromJid p.getAttribute 'from'
+	type = p.getAttribute('type')
+
+	if type is 'error'
+		errorElem = p.getElementsByTagName('error')[0]
+		errorType = errorElem.childNodes[0].nodeName
+		desc = "An unexpected error has occured. Please try again or contact support@eagull.net."
+		changeNick = false
+		goHome = true
+		if not xmpp.rooms[room]?.joined then switch errorType
+			when 'not-authorized'
+				desc = "This room requires a password. Try using an XMPP client to join it."
+			when 'forbidden'
+				desc = "You are banned from this room."
+			when 'item-not-found'
+				desc = "The room does not exist."
+			when 'not-allowed'
+				desc = "Room creation is restricted."
+			when 'not-acceptable'
+				desc = "The reserved nickname must be used."
+				changeNick = true
+				goHome = false
+			when 'registration-required'
+				desc = "You are not on the member list."
+			when 'conflict'
+				desc = "Your desired nickname is in use or registered by another user."
+				changeNick = true
+			when 'service-unavailable'
+				desc = "Manimum number of users has been reached for this room."
+		else switch errorType
+			when 'forbidden'
+				desc = "Whatever you just tried is not allowed. Please try something else."
+				goHome = false
+			when 'conflict'
+				desc = "Your desired nickname is in use or registered by another user."
+				goHome = false
+
+		$(xmpp).triggerHandler 'presenceError',
+			room: room
+			code: errorElem.getAttribute('code')
+			type: errorType
+			desc: desc
+			goHome: goHome
+			changeNick: changeNick
+
+		return
 
 	return true if room not of xmpp.rooms
 
-	type = p.getAttribute('type')
 	statusElems = p.getElementsByTagName('status')
 	statusCodes = (parseInt(s.getAttribute('code')) for s in statusElems)
-	
+
 	selfPresence = statusCodes.indexOf(110) >= 0
 
 	if selfPresence and type isnt 'unavailable'
@@ -117,11 +161,6 @@ xmpp.mucPresenceHandler = (p) ->
 	else if not xmpp.rooms[room].joined
 		xmpp.rooms[room].roster.push nick
 		return true
-
-	if type is 'error'
-		$(xmpp).triggerHandler 'error',
-			stanza: p
-		return
 
 	if type is 'unavailable'
 		i = xmpp.rooms[room].roster.indexOf nick
@@ -135,7 +174,7 @@ xmpp.mucPresenceHandler = (p) ->
 				room: room
 				nick: nick
 				reason: reason or ""
-				self: selfPresence
+				self: nick is xmpp.rooms[room].nick
 			delete xmpp.rooms[room] if xmpp.rooms[room].nick is nick
 
 		else if statusCodes.indexOf(301) >= 0
@@ -146,7 +185,7 @@ xmpp.mucPresenceHandler = (p) ->
 				room: room
 				nick: nick
 				reason: reason or ""
-				self: selfPresence
+				self: nick is xmpp.rooms[room].nick
 			delete xmpp.rooms[room] if xmpp.rooms[room].nick is nick
 
 		else if statusCodes.indexOf(303) >= 0
