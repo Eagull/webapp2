@@ -93,9 +93,11 @@ app.get '/*', (req, res) ->
 			res.render 'index.jade', viewParams
 		else
 			url = "http://content.dragonsblaze.com/json/" + contentMap[page]
-			request {url: url, json: true, timeout: 1000}, (error, response, body) ->
+			request {url: url, json: true, timeout: 2500}, (error, response, body) ->
 				if error
-					console.error JSON.stringify error
+					error.page = page
+					error.url = url
+					util.log "Error fetching page content: " + JSON.stringify error
 					viewParams['content'] = "Unexpected server error has occured. Raise an alarm, or attempt to <a href='/room/firemoth@chat.eagull.net'>Join the Conversation!</a>"
 				else
 					contentCache[page] = body
