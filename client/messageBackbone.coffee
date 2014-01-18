@@ -112,7 +112,7 @@ MessageView = Backbone.View.extend
 		this
 
 	postStatus: (msg) ->
-		msgEl = $('<span>').html util.linkify $('<div>').html(msg).text()
+		msgEl = $('<span>').html util.linkify msg
 		msgEl.attr 'title', new Date().toLocaleTimeString()
 		@append msgEl, 'status'
 		this

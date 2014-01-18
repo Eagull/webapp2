@@ -65,7 +65,7 @@ xmpp.messageHandler = (msg) ->
 		subjectTags = msg.getElementsByTagName('subject')
 		if subjectTags.length == 0
 			return true
-		subject = $('<div>').html(Strophe.getText(subjectTags[0])).text()
+		subject = Strophe.getText(subjectTags[0])
 		if room of xmpp.rooms
 			xmpp.rooms[room].subject = subject
 		$(xmpp).triggerHandler 'subject',
@@ -84,7 +84,7 @@ xmpp.messageHandler = (msg) ->
 			to: xmpp.rooms[room].nick
 			nick: nick
 			room: room
-			text: $('<div>').html(Strophe.getText(bodyTags[0])).text()
+			text: Strophe.getText(bodyTags[0])
 			self: nick is xmpp.rooms[room].nick
 		return true
 
@@ -92,7 +92,7 @@ xmpp.messageHandler = (msg) ->
 		to: msg.getAttribute 'to'
 		nick: nick
 		room: room
-		text: $('<div>').html(Strophe.getText(bodyTags[0])).text()
+		text: Strophe.getText(bodyTags[0])
 		delay: delay
 		self: nick is xmpp.rooms[room].nick
 

@@ -27,7 +27,7 @@ setTopic = (topic) ->
 	if not topic and config.currentRoom of xmpp.rooms
 		topic = xmpp.rooms[config.currentRoom].subject
 	if topic
-		topic = util.linkify $('<div>').html(topic).text()
+		topic = util.linkify topic
 	$('#topic').html topic or config.currentRoom
 	$('#topicContainer').slideDown(-> $(window).resize())
 
